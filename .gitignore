@@ -1,0 +1,14 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Datos y Binarios
+Dataset.zip
+garbage_classification/
+garbage_classification_5/
+
+# Python (opcional pero recomendado)
+__pycache__/
+*.py[cod]
