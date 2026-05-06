@@ -21,7 +21,8 @@ Glue job (Py Spark) -> (S3 guardarlos en formato parquet)
                 Dado que se puede tener un datadrift, y en este caso se tiene que reentrenar y actualizar
                 endpoint
     SNS -> Notificacion al ing de machine learning que cheque el modelo.
-
+    
+# Fase D
 CI/CD
 
 

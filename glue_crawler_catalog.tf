@@ -37,7 +37,9 @@ resource "aws_iam_role_policy" "s3_access" {
         "arn:aws:s3:::bucket-source-garbage-classification",
         "arn:aws:s3:::bucket-source-garbage-classification/*",
         "arn:aws:s3:::bucket-target-garbage-classification",
-        "arn:aws:s3:::bucket-target-garbage-classification/*"
+        "arn:aws:s3:::bucket-target-garbage-classification/*",
+        "arn:aws:s3:::bucket-code-garbage-classification",
+        "arn:aws:s3:::bucket-code-garbage-classification/*"
       ] 
     }]
   })
@@ -59,12 +61,26 @@ resource "aws_glue_crawler" "garbage_crawler" {
 
   s3_target {
     path = "s3://${aws_s3_bucket.source.bucket}/"
+    exclusions = [
+      "*.jpg",
+      "*.jpeg",
+      "*.png"
+    ]
+  }
+
+  schema_change_policy {
+    update_behavior = "UPDATE_IN_DATABASE"
+    delete_behavior = "LOG"
   }
 
   configuration = jsonencode({
     Version = 1.0
+    Grouping = {
+      TableGroupingPolicy     = "CombineCompatibleSchemas"
+      TableLevelConfiguration = 2
+    }
     CrawlerOutput = {
-      Partitions = { AddOrUpdateBehavior = "InheritFromTable" }
+      Tables = { AddOrUpdateBehavior = "MergeNewColumns" }
     }
   })
 }
@@ -82,7 +98,7 @@ resource "aws_glue_trigger" "start_crawler_trigger" {
   name          = "s3-event-starts-crawler"
   type          = "EVENT" # <--- Esto indica que espera a EventBridge
   workflow_name = aws_glue_workflow.garbage_wf.name
-
+  # start_on_creation  = true  
   actions {
     crawler_name = aws_glue_crawler.garbage_crawler.name
   }
@@ -134,14 +150,14 @@ resource "aws_iam_role_policy" "eventbridge_glue_policy" {
 # Regla de EventBridge: ¿Qué estamos buscando?
 resource "aws_cloudwatch_event_rule" "s3_upload_rule" {
   name        = "notify-glue-on-s3-upload"
-  description = "Dispara Glue cuando se suben archivos al bucket source"
+  description = "Captura cualquier creacion de objeto en el bucket source"
 
   event_pattern = jsonencode({
-    source      = ["aws.s3"]
-    detail_type = ["Object Created"]
-    detail = {
-      bucket = {
-        name = [aws_s3_bucket.source.id]
+    "source": ["aws.s3"],
+    "detail-type": ["Object Created"],
+    "detail": {
+      "bucket": {
+        "name": ["bucket-source-garbage-classification"] 
       }
     }
   })
