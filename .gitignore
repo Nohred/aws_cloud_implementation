@@ -8,6 +8,7 @@
 Dataset.zip
 garbage_classification/
 garbage_classification_5/
+src/garbage_classification/
 
 # Python (opcional pero recomendado)
 __pycache__/

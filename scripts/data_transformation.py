@@ -1,49 +1,40 @@
-import sys
-import boto3
-import io
-from datetime import datetime
-from awsglue.utils import getResolvedOptions
-from pyspark.context import SparkContext
-from awsglue.context import GlueContext
-from awsglue.job import Job
-from PIL import Image
+#!/usr/bin/env python3
+import argparse
+from pathlib import Path
+import cv2
 
-args = getResolvedOptions(sys.argv, ['JOB_NAME'])
-sc = SparkContext()
-glueContext = GlueContext(sc)
-job = Job(glueContext)
-job.init(args['JOB_NAME'], args)
 
-SOURCE_BUCKET = "bucket-source-garbage-classification"
-TARGET_BUCKET = "bucket-target-garbage-classification"
-TODAY = datetime.utcnow().strftime("%Y-%m-%d")
+def resize_image(input_path: Path, output_path: Path, size: int) -> None:
+    image = cv2.imread(str(input_path))
+    if image is None:
+        raise ValueError(f"No se pudo leer la imagen: {input_path}")
 
-s3 = boto3.client('s3')
-paginator = s3.get_paginator('list_objects_v2')
+    resized = cv2.resize(image, (size, size), interpolation=cv2.INTER_AREA)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
-for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=f"{TODAY}/"):
-    for obj in page.get('Contents', []):
-        key = obj['Key']
-        if not key.lower().endswith(('.jpg', '.jpeg', '.png')):
-            continue
+    if not cv2.imwrite(str(output_path), resized):
+        raise ValueError(f"No se pudo guardar la imagen: {output_path}")
 
-        # Descargar
-        img_data = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)['Body'].read()
 
-        # Procesar: convertir a RGB y resize 224x224
-        img = Image.open(io.BytesIO(img_data)).convert("RGB").resize((224, 224))
+def main():
+    parser = argparse.ArgumentParser(description="Resize simple de imágenes con OpenCV")
+    parser.add_argument("--input-dir", required=True, type=Path)
+    parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--size", type=int, default=256)
+    args = parser.parse_args()
 
-        # Guardar en target manteniendo estructura de carpetas
-        buffer = io.BytesIO()
-        img.save(buffer, format="JPEG")
-        buffer.seek(0)
+    image_paths = []
+    for ext in ("*.jpg", "*.jpeg", "*.png", "*.bmp", "*.webp"):
+        image_paths.extend(args.input_dir.glob(ext))
 
-        s3.put_object(
-            Bucket=TARGET_BUCKET,
-            Key=key,
-            Body=buffer.getvalue(),
-            ContentType='image/jpeg'
-        )
-        print(f"Procesada: {key}")
+    if not image_paths:
+        print(f"No se encontraron imágenes en {args.input_dir}")
+        return
 
-job.commit()
+    for input_path in image_paths:
+        output_path = args.output_dir / input_path.name
+        resize_image(input_path, output_path, args.size)
+        print(f"OK: {input_path.name} -> {output_path}")
+
+if __name__ == "__main__":
+    main()
