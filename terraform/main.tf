@@ -19,9 +19,9 @@ module "storage" {
 module "data_eng" {
   source = "./data-eng"
 
-  project_name    = var.project_name
-  environment     = var.environment
-  raw_bucket_name = "${var.project_name}-${var.environment}-raw"
+  project_name          = var.project_name
+  environment           = var.environment
+  raw_bucket_name       = "${var.project_name}-${var.environment}-raw"
   processed_bucket_name = "${var.project_name}-${var.environment}-processed"
-  code_bucket_name = "${var.project_name}-${var.environment}-code"
+  code_bucket_name      = "${var.project_name}-${var.environment}-code"
 }

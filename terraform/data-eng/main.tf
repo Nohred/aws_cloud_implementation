@@ -62,13 +62,24 @@ resource "aws_iam_role_policy" "glue_crawler_policy" {
           "glue:GetTable",
           "glue:GetTables",
           "glue:UpdateTable",
+          "glue:DeleteTable",
           "glue:BatchCreatePartition",
           "glue:CreatePartition",
           "glue:UpdatePartition",
+          "glue:DeletePartition",
           "glue:GetPartition",
           "glue:GetPartitions"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
       }
     ]
   })
@@ -116,6 +127,15 @@ resource "aws_iam_role_policy" "glue_job_policy" {
     Version = "2012-10-17"
     Statement = [
       {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*" # Permitir acceso a CloudWatch Logs para cualquier recurso
+      },
+      {
         Effect = "Allow"
         Action = [
           "s3:GetObject",
@@ -138,18 +158,22 @@ resource "aws_iam_role_policy" "glue_job_policy" {
 resource "aws_glue_job" "image_resize" {
   name     = "${var.project_name}-${var.environment}-image-resize"
   role_arn = aws_iam_role.glue_job_role.arn
-
   command {
-    name            = "pythonshell"
-    python_version  = "3.9"
-    script_location = "s3://${var.code_bucket_name}/scripts/data_transformation.py"
+    name            = "glueetl" # Pyspark Job instead of Python Shell 
+    python_version  = "3"
+    script_location = "s3://${var.code_bucket_name}/scripts/glue_etl.py"
   }
 
- 
-  default_arguments = {
-  "--job-language" = "python"
-  "--TempDir"      = "s3://${var.code_bucket_name}/temp/"
-  "--extra-py-files" = "s3://${var.code_bucket_name}/libs/opencv-python-headless.whl s3://${var.code_bucket_name}/libs/numpy-python.whl"
+  number_of_workers = 2     # Numero de workers para el job, paralelismo
+  worker_type       = "G.1X" # Tipo de worker, G.1X es un worker general con 1 vCPU y 4 GB de RAM
 
-}
+  default_arguments = {
+    "--TempDir"       = "s3://${var.code_bucket_name}/temp/"
+    "--input_bucket"  = "${var.raw_bucket_name}"
+    "--output_bucket" = "${var.processed_bucket_name}"
+    "--output_prefix" = "resized/"
+    "--size"          = "256"
+    # If you upload wheels to the code bucket, list them here as space-separated S3 paths
+    # "--extra-py-files" = "s3://${var.code_bucket_name}/libs/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl s3://${var.code_bucket_name}/libs/Pillow-9.5.0.whl"
+  }
 }
