@@ -7,6 +7,8 @@
 # Datos y Binarios
 Dataset.zip
 garbage_classification/
+src/local_test/
+src/split_data/
 garbage_classification_5/
 src/garbage_classification/
 temp/
