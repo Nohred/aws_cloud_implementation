@@ -1,0 +1,76 @@
+{
+  "StartSageMakerTraining": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::sagemaker:createTrainingJob.sync",
+    "Parameters": {
+      "TrainingJobName.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)",
+      "RoleArn": "arn:aws:iam::${account_id}:role/${project_name}-${environment}-sagemaker-execution-role",
+      "AlgorithmSpecification": {
+        "TrainingImage": "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker",
+        "TrainingInputMode": "File",
+        "MetricDefinitions": [
+          { "Name": "train:loss",     "Regex": "train:loss=([0-9\\.]+);" },
+          { "Name": "train:accuracy", "Regex": "train:accuracy=([0-9\\.]+);" },
+          { "Name": "train:macro_f1", "Regex": "train:macro_f1=([0-9\\.]+);" },
+          { "Name": "train:recall",   "Regex": "train:recall=([0-9\\.]+);" },
+          { "Name": "val:loss",       "Regex": "val:loss=([0-9\\.]+);" },
+          { "Name": "val:accuracy",   "Regex": "val:accuracy=([0-9\\.]+);" },
+          { "Name": "val:macro_f1",   "Regex": "val:macro_f1=([0-9\\.]+);" },
+          { "Name": "val:recall",     "Regex": "val:recall=([0-9\\.]+);" }
+        ]
+      },
+      "HyperParameters": {
+        "epochs": "17",
+        "batch_size": "32",
+        "lr": "0.001",
+        "num_classes": "10",
+        "sagemaker_program": "train.py",
+        "sagemaker_submit_directory": "s3://${project_name}-${environment}-processed-v3/code/sourcedir.tar.gz"
+      },
+      "ResourceConfig": {
+        "InstanceCount": 1,
+        "InstanceType": "ml.g4dn.xlarge", 
+        "VolumeSizeInGB": 30
+      },
+      "StoppingCondition": { "MaxRuntimeInSeconds": 18000 },
+      "OutputDataConfig": {
+        "S3OutputPath": "s3://${project_name}-${environment}-processed-v3/models/"
+      },
+      "TensorBoardOutputConfig": {
+        "S3OutputPath": "s3://${project_name}-${environment}-processed-v3/tensorboard/"
+      }, 
+     
+      "InputDataConfig": [
+        {
+          "ChannelName": "train",
+          "DataSource": {
+            "S3DataSource": {
+              "S3DataType": "S3Prefix",
+              "S3Uri.$": "States.Format('s3://${project_name}-${environment}-processed-v3/{}/', $.target_batch)",
+              "S3DataDistributionType": "FullyReplicated"
+            }
+          },
+          "ContentType": "application/x-recordio"
+        },
+        {
+          "ChannelName": "validation",
+          "DataSource": {
+            "S3DataSource": {
+              "S3DataType": "S3Prefix",
+              "S3Uri.$": "States.Format('s3://${project_name}-${environment}-processed-v3/{}/', $.target_batch)",
+              "S3DataDistributionType": "FullyReplicated"
+            }
+          },
+          "ContentType": "application/x-recordio"
+        }
+      ]
+    },
+    "ResultPath": "$.SageMakerResult",
+    "Next": "PipelineSucceeded",
+    "Catch": [{
+      "ErrorEquals": ["States.ALL"],
+      "ResultPath": "$.SageMakerError",
+      "Next": "JobFailed"
+    }]
+  }
+}

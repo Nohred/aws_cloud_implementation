@@ -8,7 +8,19 @@
 Dataset.zip
 garbage_classification/
 garbage_classification_5/
+garbage_classification_1200/
+src/garbage_classification/
+temp/
+prueba_final_final.tar.gz
+prueba_final_final.tgz
 
 # Python (opcional pero recomendado)
 __pycache__/
 *.py[cod]
+
+# Archivos de datos pesados
+*.tar.gz
+*.tgz
+*.zip
+*.rec
+*.idxgit rm --cached -r .

@@ -1,0 +1,65 @@
+{
+  "StartCrawler": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
+    "Parameters": { "Name": "${crawler_name}" },
+    "ResultPath": "$.CrawlerStart",
+    "Next": "WaitForCrawler"
+  },
+  "WaitForCrawler": { "Type": "Wait", "Seconds": 30, "Next": "GetCrawlerStatus" },
+  "GetCrawlerStatus": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
+    "Parameters": { "Name": "${crawler_name}" },
+    "ResultPath": "$.CrawlerStatus",
+    "Next": "CrawlerRunning"
+  },
+  "CrawlerRunning": {
+    "Type": "Choice",
+    "Choices": [
+        { "Variable": "$.CrawlerStatus.Crawler.State", "StringEquals": "RUNNING",  "Next": "WaitForCrawler" },
+        { "Variable": "$.CrawlerStatus.Crawler.State", "StringEquals": "STOPPING", "Next": "WaitForCrawler" }
+    ],
+    "Default": "CrawlerFinished"
+},
+  "CrawlerFinished": {
+    "Type": "Choice",
+    "Choices": [{ "Variable": "$.CrawlerStatus.Crawler.State", "StringEquals": "READY", "Next": "StartGlueJob" }],
+    "Default": "CrawlerFailed"
+  },
+  "CrawlerFailed": { "Type": "Fail", "Error": "CrawlerFailed", "Cause": "Glue crawler did not succeed" },
+  "StartGlueJob": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::aws-sdk:glue:startJobRun",
+    "Parameters": {
+      "JobName": "${job_name}",
+      "Arguments": { "--target_batch.$": "$.target_batch" }
+    },
+    "ResultPath": "$.JobStart",
+    "Next": "WaitForJob"
+  },
+  "WaitForJob": { "Type": "Wait", "Seconds": 60, "Next": "GetJobStatus" },
+  "GetJobStatus": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::aws-sdk:glue:getJobRun",
+    "Parameters": { "JobName": "${job_name}", "RunId.$": "$.JobStart.JobRunId" },
+    "ResultPath": "$.JobStatus",
+    "Next": "JobRunning"
+  },
+  "JobRunning": {
+    "Type": "Choice",
+    "Choices": [
+      { "Variable": "$.JobStatus.JobRun.JobRunState", "StringEquals": "RUNNING", "Next": "WaitForJob" }
+    ],
+    "Default": "JobEvaluation"
+  },
+  "JobEvaluation": {
+    "Type": "Choice",
+    "Choices": [
+      { "Variable": "$.JobStatus.JobRun.JobRunState", "StringEquals": "SUCCEEDED", "Next": "StartSageMakerTraining" }
+    ],
+    "Default": "JobFailed"
+  },
+  "JobFailed": { "Type": "Fail", "Error": "JobFailed", "Cause": "Glue job or SageMaker training did not succeed" },
+  "PipelineSucceeded": { "Type": "Succeed" }
+}
