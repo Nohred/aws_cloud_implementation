@@ -136,13 +136,13 @@ resource "aws_iam_role_policy" "glue_job_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*" # Permitir acceso a CloudWatch Logs para cualquier recurso
+        "Effect" : "Allow",
+        "Action" : [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : "arn:aws:logs:*:*:*" # Permitir acceso a CloudWatch Logs para cualquier recurso
       },
       {
         Effect = "Allow"
@@ -176,7 +176,7 @@ resource "aws_glue_job" "image_resize" {
     script_location = "s3://${var.code_bucket_name}/scripts/glue_etl.py"
   }
 
-  number_of_workers = 8     # Numero de workers para el job, paralelismo
+  number_of_workers = 8      # Numero de workers para el job, paralelismo
   worker_type       = "G.2X" # Tipo de worker, G.1X es un worker general con 1 vCPU y 4 GB de RAM
 
   default_arguments = {
@@ -194,10 +194,13 @@ resource "aws_glue_job" "image_resize" {
 resource "aws_s3_object" "glue_script" {
   bucket = var.code_bucket_name
   key    = "scripts/glue_etl.py"
-  
+
   # Subimos dos niveles: salimos del módulo, salimos de terraform y entramos a scripts
-  source = "${path.module}/../../scripts/glue_etl.py"
-  etag   = filemd5("${path.module}/../../scripts/glue_etl.py")
+  # source = "${path.module}/../../scripts/glue_etl.py"
+  # etag   = filemd5("${path.module}/../../scripts/glue_etl.py")
+  # Subimos tres niveles: entramos a modules/data-eng, salimos de terraform y entramos a scripts
+  source = "${path.module}/../../../scripts/glue_etl.py"
+  etag   = filemd5("${path.module}/../../../scripts/glue_etl.py")
 }
 
 
@@ -206,14 +209,14 @@ resource "aws_s3_object" "glue_script" {
 resource "terraform_data" "pack_train_tar" {
   # Se re-empaqueta si cambia train.py O requirements.txt
   triggers_replace = [
-    filemd5("${path.module}/../../scripts/train.py"),
-    filemd5("${path.module}/../../scripts/requirements.txt")
+    filemd5("${path.module}/../../../scripts/train.py"),
+    filemd5("${path.module}/../../../scripts/requirements.txt")
   ]
 
   provisioner "local-exec" {
     # Incluye requirements.txt en el tar — SageMaker lo detecta automáticamente
     # y ejecuta "pip install -r requirements.txt" antes de correr train.py
-    command = "tar -czf ${path.module}/../../scripts/sourcedir.tar.gz -C ${path.module}/../../scripts train.py requirements.txt"
+    command = "tar -czf ${path.module}/../../../scripts/sourcedir.tar.gz -C ${path.module}/../../../scripts train.py requirements.txt"
   }
 }
 
@@ -221,14 +224,14 @@ resource "terraform_data" "pack_train_tar" {
 resource "aws_s3_object" "train_script" {
   depends_on = [terraform_data.pack_train_tar]
 
-  bucket = var.processed_bucket_name
-  key    = "code/sourcedir.tar.gz"
-  source = "${path.module}/../../scripts/sourcedir.tar.gz"
+  bucket = var.code_bucket_name
+  key    = "training/sourcedir.tar.gz"
+  source = "${path.module}/../../../scripts/sourcedir.tar.gz"
 
   # etag cambia si cambia train.py o requirements.txt → fuerza re-subida a S3
   etag = md5(join("", [
-    filemd5("${path.module}/../../scripts/train.py"),
-    filemd5("${path.module}/../../scripts/requirements.txt")
+    filemd5("${path.module}/../../../scripts/train.py"),
+    filemd5("${path.module}/../../../scripts/requirements.txt")
   ]))
 }
 
@@ -289,7 +292,7 @@ resource "aws_iam_role_policy" "sagemaker_execution_policy" {
           "ecr:BatchCheckLayerAvailability"
         ]
         # Permite descargar las imágenes oficiales de TensorFlow/PyTorch desde el registro público de AWS
-        Resource = "*" 
+        Resource = "*"
       }
     ]
   })

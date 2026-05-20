@@ -16,8 +16,8 @@ provider "aws" {
       glue   = "http://localhost:4566"
       iam    = "http://localhost:4566"
       sts    = "http://localhost:4566"
-      sqs    = "http://localhost:4566"     # NUEVO: endpoint SQS para LocalStack
-      lambda = "http://localhost:4566"     # NUEVO: endpoint Lambda para LocalStack
+      sqs    = "http://localhost:4566" # NUEVO: endpoint SQS para LocalStack
+      lambda = "http://localhost:4566" # NUEVO: endpoint Lambda para LocalStack
     }
   }
 }

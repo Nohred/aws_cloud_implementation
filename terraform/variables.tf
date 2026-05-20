@@ -28,3 +28,9 @@ variable "common_tags" {
     project    = "waste-classifier"
   }
 }
+
+variable "account_id" {
+  description = "ID de la cuenta AWS (se obtiene dinámicamente)"
+  type        = string
+
+}

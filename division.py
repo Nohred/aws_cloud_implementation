@@ -43,6 +43,6 @@ def sample_images(source_root, n):
 
 # --- CONFIGURACIÓN ---
 NOMBRE_CARPETA_RAIZ = 'garbage_classification' 
-CANTIDAD_N = 1200 # Cambia este número por el que necesites
+CANTIDAD_N = 5 # Cambia este número por el que necesites
 
 sample_images(NOMBRE_CARPETA_RAIZ, CANTIDAD_N)

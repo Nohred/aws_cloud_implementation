@@ -1,7 +1,29 @@
+variable "project_name" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "raw_bucket_name" {
+  type = string 
+}
+
+variable "processed_bucket_name" {
+  type = string 
+}
+
+variable "code_bucket_name" {
+  type = string 
+}
+
 locals {
   crawler_name = "${var.project_name}-${var.environment}-raw-crawler"
   job_name     = "${var.project_name}-${var.environment}-image-resize"
   log_group    = "/aws/states/${var.project_name}-${var.environment}-etl-orchestration"
+
+
 }
 
 # ─────────────────────────────────────────────
@@ -79,7 +101,7 @@ resource "aws_sfn_state_machine" "etl_orchestration" {
   definition = jsonencode({
     Comment = "Run Glue crawler, wait for catalog refresh, then run the Glue job and trigger SageMaker training"
     StartAt = "StartCrawler"
-    
+
     States = merge(
       jsondecode(templatefile("${path.module}/glue_flow.json", {
         crawler_name = local.crawler_name
@@ -105,8 +127,8 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_sqs_queue" "etl_trigger" {
   name                       = "${var.project_name}-${var.environment}-etl-trigger"
-  visibility_timeout_seconds = 600   # >= timeout de la Lambda
-  message_retention_seconds  = 3600  # Descartar mensajes tras 1 hora
+  visibility_timeout_seconds = 600  # >= timeout de la Lambda
+  message_retention_seconds  = 3600 # Descartar mensajes tras 1 hora
 
   # SQS acumula los 10k eventos de S3 sin perder ninguno.
   # La Lambda los consume en lotes y decide si iniciar el pipeline.
@@ -214,7 +236,8 @@ resource "aws_cloudwatch_event_rule" "s3_raw_upload" {
   event_pattern = jsonencode({
     source      = ["aws.s3"]
     detail-type = ["Object Created"]
-    detail      = { bucket = { name = [module.storage.raw_bucket_id] } }
+    # detail      = { bucket = { name = [module.storage.raw_bucket_id] } }
+    detail      = { bucket = { name = [var.raw_bucket_name] } }
   })
 }
 
@@ -255,7 +278,7 @@ resource "aws_iam_role_policy" "eventbridge_policy" {
 }
 
 resource "aws_s3_bucket_notification" "raw_bucket_notifications" {
-  bucket      = module.storage.raw_bucket_id
+  bucket      = var.raw_bucket_name
   eventbridge = true
 }
 
@@ -277,8 +300,8 @@ resource "aws_iam_role_policy" "step_functions_sagemaker_policy" {
           "sagemaker:CreateTrainingJob",
           "sagemaker:DescribeTrainingJob",
           "sagemaker:StopTrainingJob",
-          "sagemaker:AddTags",           # ⚠️ Requerido obligatoriamente por el modo .sync
-          "sagemaker:UpdateTrainingJob"  # Necesario para TensorBoard output config
+          "sagemaker:AddTags",          # ⚠️ Requerido obligatoriamente por el modo .sync
+          "sagemaker:UpdateTrainingJob" # Necesario para TensorBoard output config
         ]
         # ── BLINDAJE: Usamos "*" para evitar fallos por discrepancias de nombres dinámicos ──
         Resource = "*"
