@@ -234,7 +234,6 @@ resource "aws_s3_object" "train_script" {
     filemd5("${path.module}/../../../scripts/requirements.txt")
   ]))
 }
-
 # ─────────────────────────────────────────────
 # SAGEMAKER — Definiendo ROLES para Glue y SageMaker con permisos mínimos necesarios
 # ─────────────────────────────────────────────
@@ -242,13 +241,16 @@ resource "aws_s3_object" "train_script" {
 resource "aws_iam_role" "sagemaker_execution_role" {
   name = "${var.project_name}-${var.environment}-sagemaker-execution-role"
 
+  # AQUÍ SOLO QUEDA EL ASSUME ROLE (TRUST POLICY)
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "sagemaker.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "sagemaker.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
   })
 }
 
@@ -256,6 +258,7 @@ resource "aws_iam_role_policy" "sagemaker_execution_policy" {
   name = "${var.project_name}-${var.environment}-sagemaker-execution-policy"
   role = aws_iam_role.sagemaker_execution_role.id
 
+  # AQUÍ VAN TODOS LOS PERMISOS, INCLUYENDO SSM
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -293,6 +296,15 @@ resource "aws_iam_role_policy" "sagemaker_execution_policy" {
         ]
         # Permite descargar las imágenes oficiales de TensorFlow/PyTorch desde el registro público de AWS
         Resource = "*"
+      },
+      {
+        # --- AQUÍ AÑADIMOS EL PERMISO DE SSM ---
+        Effect   = "Allow"
+        Action   = [
+          "ssm:PutParameter", 
+          "ssm:GetParameter"
+        ]
+        Resource = "arn:aws:ssm:us-east-1:${var.account_id}:parameter/${var.project_name}/${var.environment}/*"
       }
     ]
   })

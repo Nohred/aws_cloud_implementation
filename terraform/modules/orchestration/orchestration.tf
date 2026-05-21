@@ -111,6 +111,7 @@ resource "aws_sfn_state_machine" "etl_orchestration" {
         project_name = var.project_name
         environment  = var.environment
         account_id   = data.aws_caller_identity.current.account_id
+        code_bucket_name = var.code_bucket_name
       }))
     )
   })
@@ -324,6 +325,11 @@ resource "aws_iam_role_policy" "step_functions_sagemaker_policy" {
           "events:RemoveTargets"
         ]
         Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["ssm:PutParameter", "ssm:GetParameter"]
+        Resource = "arn:aws:ssm:us-east-1:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/*"
       }
     ]
   })

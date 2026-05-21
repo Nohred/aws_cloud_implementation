@@ -11,6 +11,7 @@
 import os
 import struct
 import json
+import boto3
 import io
 import torch
 import torch.nn as nn
@@ -279,8 +280,54 @@ def train(args: dict):
     with open(os.path.join(args['model_dir'], 'classes.json'), 'w') as f:
         json.dump(class_mapping, f, indent=2)
 
+    inference_bucket = os.environ.get('INFERENCE_SCRIPT_BUCKET')
+    inference_key    = os.environ.get('INFERENCE_SCRIPT_KEY', 'inference/inference.py')
+
+    if inference_bucket:
+        code_dir = os.path.join(args['model_dir'], 'code')
+        os.makedirs(code_dir, exist_ok=True)
+        dest = os.path.join(code_dir, 'inference.py')
+
+        print(f"\n📥 Descargando inference.py desde s3://{inference_bucket}/{inference_key}")
+        boto3.client('s3').download_file(inference_bucket, inference_key, dest)
+        print(f"✅ inference.py inyectado en: {dest}")
+    else:
+        print("[WARNING] INFERENCE_SCRIPT_BUCKET no definido. inference.py NO incluido en el modelo.")
+
     print(f"Modelo guardado en: {args['model_dir']}")
     print("\nENTRENAMIENTO COMPLETADO")
+    # ── Registrar URL del modelo en SSM Parameter Store ──────────────────────────
+    # Esto permite que Terraform siempre encuentre el último modelo sin hardcodear rutas
+    ssm_parameter = os.environ.get('MODEL_SSM_PARAMETER')
+    if ssm_parameter:
+        # SageMaker expone la ruta S3 de salida como variable de entorno
+        model_s3_uri = os.path.join(
+            os.environ.get('SM_OUTPUT_DATA_DIR', '').replace('/data', ''),
+            'model.tar.gz'
+        ).replace('/output/data/', '/output/')
+
+        # Más confiable: construirla desde las variables de SageMaker
+        output_path = os.environ.get('SM_OUTPUT_DIR', '/opt/ml/output')
+        # SageMaker sube SM_MODEL_DIR como model.tar.gz al S3OutputPath del training job
+        # La URL final es: {S3OutputPath}/{TrainingJobName}/output/model.tar.gz
+        training_job_name = os.environ.get('TRAINING_JOB_NAME', '')
+        s3_output_path    = os.environ.get('SM_HP_S3_OUTPUT_PATH', '')
+
+        if training_job_name and s3_output_path:
+            model_url = f"{s3_output_path.rstrip('/')}/{training_job_name}/output/model.tar.gz"
+            print(f"\n📌 Registrando modelo en SSM: {ssm_parameter}")
+            print(f"   URL: {model_url}")
+            boto3.client('ssm', region_name='us-east-1').put_parameter(
+                Name=ssm_parameter,
+                Value=model_url,
+                Type='String',
+                Overwrite=True
+            )
+            print("✅ SSM actualizado")
+        else:
+            print("[WARNING] No se pudo construir model_url: faltan variables de entorno")
+    else:
+        print("[WARNING] MODEL_SSM_PARAMETER no definido. SSM no actualizado.")
 
 
 # ── 5. Punto de entrada ───────────────────────────────────────────────────────

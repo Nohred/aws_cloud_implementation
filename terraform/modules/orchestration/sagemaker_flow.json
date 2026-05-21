@@ -5,6 +5,15 @@
     "Parameters": {
       "TrainingJobName.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)",
       "RoleArn": "arn:aws:iam::${account_id}:role/${project_name}-${environment}-sagemaker-execution-role",
+
+    "Environment": {
+      "INFERENCE_SCRIPT_BUCKET": "${code_bucket_name}",
+      "INFERENCE_SCRIPT_KEY":    "inference/inference.py",
+      "MODEL_SSM_PARAMETER":     "/${project_name}/${environment}/latest-model-url",
+      "SM_HP_S3_OUTPUT_PATH":    "s3://${code_bucket_name}/models",
+      "TRAINING_JOB_NAME.$":     "States.Format('${project_name}-b3-{}', $$.Execution.Name)"
+    },
+
       "AlgorithmSpecification": {
         "TrainingImage": "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker",
         "TrainingInputMode": "File",

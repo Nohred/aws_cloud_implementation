@@ -23,3 +23,9 @@ resource "aws_s3_bucket" "code" {
 
   force_destroy = true
 }
+
+resource "aws_s3_bucket" "inference" {
+  bucket = "${var.project_name}-${var.environment}-inference-v3"
+
+  force_destroy = true
+}
