@@ -29,9 +29,9 @@
         ]
       },
       "HyperParameters": {
-        "epochs": "17",
+        "epochs": "25",
         "batch_size": "32",
-        "lr": "0.001",
+        "lr": "0.0005",
         "num_classes": "10",
         "sagemaker_program": "train.py",
         "sagemaker_submit_directory": "s3://${project_name}-${environment}-code-v3/training/sourcedir.tar.gz"
@@ -63,6 +63,17 @@
         },
         {
           "ChannelName": "validation",
+          "DataSource": {
+            "S3DataSource": {
+              "S3DataType": "S3Prefix",
+              "S3Uri.$": "States.Format('s3://${project_name}-${environment}-processed-v3/{}/', $.target_batch)",
+              "S3DataDistributionType": "FullyReplicated"
+            }
+          },
+          "ContentType": "application/x-recordio"
+        },
+        {
+          "ChannelName": "test",
           "DataSource": {
             "S3DataSource": {
               "S3DataType": "S3Prefix",

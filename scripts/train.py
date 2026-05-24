@@ -30,9 +30,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _RECORDIO_MAGIC = 0xCED7230A
 
 # ── Directorios de SageMaker ──────────────────────────────────────────────────
-# SageMaker monta estos directorios en el contenedor automáticamente.
-# /opt/ml/output/tensorboard/ → se sube a S3 (TensorBoardOutputConfig en Terraform)
-# /opt/ml/output/data/        → se sube a S3 como output.tar.gz al terminar el job
 TENSORBOARD_DIR = os.environ.get('SM_TENSORBOARD_OUTPUT_DIR', '/opt/ml/output/tensorboard')
 OUTPUT_DATA_DIR = os.environ.get('SM_OUTPUT_DATA_DIR',        '/opt/ml/output/data')
 os.makedirs(TENSORBOARD_DIR, exist_ok=True)
@@ -46,11 +43,13 @@ class SageMakerRecordIODataset(Dataset):
         self.records: list[tuple[bytes, int]] = []
 
         rec_path = None
-        for root, _, files in os.walk(base_dir):
-            if filename in files:
-                rec_path = os.path.join(root, filename)
-                print(f"[Dataset] Encontrado: {rec_path}")
-                break
+        # BLINDAJE: Solo intentar buscar si base_dir no es None
+        if base_dir is not None:
+            for root, _, files in os.walk(base_dir):
+                if filename in files:
+                    rec_path = os.path.join(root, filename)
+                    print(f"[Dataset] Encontrado: {rec_path}")
+                    break
 
         if rec_path is None:
             print(f"[Dataset] ALERTA: '{filename}' no encontrado en '{base_dir}'.")
@@ -87,26 +86,22 @@ class SageMakerRecordIODataset(Dataset):
 
 # ── 2. Resolver num_classes desde classes.json ────────────────────────────────
 def resolve_num_classes(train_dir: str, hint: int) -> tuple[int, dict]:
-    for root, _, files in os.walk(train_dir):
-        if 'classes.json' in files:
-            with open(os.path.join(root, 'classes.json')) as f:
-                class_mapping = json.load(f)
-            actual = len(class_mapping)
-            if actual != hint:
-                print(f"[WARNING] num_classes hint={hint} != reales={actual}. Usando {actual}.")
-            print(f"[Classes] {class_mapping}")
-            return actual, class_mapping
+    if train_dir is not None:
+        for root, _, files in os.walk(train_dir):
+            if 'classes.json' in files:
+                with open(os.path.join(root, 'classes.json')) as f:
+                    class_mapping = json.load(f)
+                actual = len(class_mapping)
+                if actual != hint:
+                    print(f"[WARNING] num_classes hint={hint} != reales={actual}. Usando {actual}.")
+                print(f"[Classes] {class_mapping}")
+                return actual, class_mapping
     print(f"[WARNING] classes.json no encontrado. Usando hint={hint}.")
     return hint, {}
 
 
 # ── 3. Confusion matrix como figura matplotlib ────────────────────────────────
 def plot_confusion_matrix(cm: np.ndarray, class_names: list, title: str) -> plt.Figure:
-    """
-    Genera una figura matplotlib con la matriz de confusión normalizada.
-    Se guarda como PNG en /opt/ml/output/data/ para que SageMaker la suba a S3,
-    Y también se registra en TensorBoard como imagen.
-    """
     fig, ax = plt.subplots(figsize=(max(6, len(class_names)), max(5, len(class_names) - 1)))
     cm_norm = cm.astype(float) / (cm.sum(axis=1, keepdims=True) + 1e-9)
 
@@ -147,7 +142,6 @@ def train(args: dict):
     print(f"{'='*60}\n")
 
     num_classes, class_mapping = resolve_num_classes(args['train_dir'], args['num_classes_hint'])
-    # Mapeo inverso: índice → nombre de clase (para las etiquetas del eje de la confusion matrix)
     idx_to_class = {v: k for k, v in class_mapping.items()} if class_mapping else {i: str(i) for i in range(num_classes)}
     class_names  = [idx_to_class[i] for i in range(num_classes)]
     print(f"Clases: {class_names}\n")
@@ -158,8 +152,10 @@ def train(args: dict):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
+    # INYECCIÓN: Agregar el dataset de Test
     train_dataset = SageMakerRecordIODataset(args['train_dir'], 'train.rec',      transform=data_transforms)
     val_dataset   = SageMakerRecordIODataset(args['val_dir'],   'validation.rec', transform=data_transforms)
+    test_dataset  = SageMakerRecordIODataset(args['test_dir'],  'test.rec',       transform=data_transforms)
 
     if len(train_dataset) == 0:
         raise RuntimeError("Dataset de entrenamiento vacío.")
@@ -170,10 +166,11 @@ def train(args: dict):
     if max_label >= num_classes:
         raise RuntimeError(f"Etiqueta {max_label} >= num_classes {num_classes}.")
 
-    print(f"Train: {len(train_dataset):,}  |  Val: {len(val_dataset):,}\n")
+    print(f"Train: {len(train_dataset):,}  |  Val: {len(val_dataset):,}  |  Test: {len(test_dataset):,}\n")
 
     train_loader = DataLoader(train_dataset, batch_size=args['batch_size'], shuffle=True,  num_workers=2)
     val_loader   = DataLoader(val_dataset,   batch_size=args['batch_size'], shuffle=False, num_workers=2)
+    test_loader  = DataLoader(test_dataset,  batch_size=args['batch_size'], shuffle=False, num_workers=2)
 
     # ── Modelo ────────────────────────────────────────────────────────────────
     print("Cargando EfficientNet-B3 preentrenado...")
@@ -186,14 +183,12 @@ def train(args: dict):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.classifier[1].parameters(), lr=args['lr'])
 
-    # ── TensorBoard writer ────────────────────────────────────────────────────
-    # SageMaker sube este directorio a s3://.../tensorboard/ en tiempo real.
     writer = SummaryWriter(log_dir=TENSORBOARD_DIR)
 
-    # ── Bucle de épocas ───────────────────────────────────────────────────────
-    all_val_preds  = []   # acumula predicciones de val de la última época
-    all_val_labels = []   # acumula etiquetas reales de val de la última época
+    all_val_preds  = []
+    all_val_labels = []
 
+    # ── Bucle de épocas ───────────────────────────────────────────────────────
     for epoch in range(args['epochs']):
         print(f"\n--- Epoch {epoch+1}/{args['epochs']} ---")
 
@@ -217,13 +212,11 @@ def train(args: dict):
         t_f1   = f1_score(train_labels, train_preds, average='macro', zero_division=0)
         t_rec  = recall_score(train_labels, train_preds, average='macro', zero_division=0)
 
-        # Logs para SageMaker Metrics (regex en orchestration.tf)
-        print(f"train:loss={t_loss:.4f};")
-        print(f"train:accuracy={t_acc:.4f};")
-        print(f"train:macro_f1={t_f1:.4f};")
-        print(f"train:recall={t_rec:.4f};")
+        print(f"train:loss={t_loss:.4f};", flush=True)
+        print(f"train:accuracy={t_acc:.4f};", flush=True)
+        print(f"train:macro_f1={t_f1:.4f};", flush=True)
+        print(f"train:recall={t_rec:.4f};", flush=True)
 
-        # TensorBoard — curvas de entrenamiento
         writer.add_scalar('Loss/train',     t_loss, epoch)
         writer.add_scalar('Accuracy/train', t_acc,  epoch)
         writer.add_scalar('F1/train',       t_f1,   epoch)
@@ -247,31 +240,54 @@ def train(args: dict):
         v_f1   = f1_score(val_labels, val_preds, average='macro', zero_division=0)
         v_rec  = recall_score(val_labels, val_preds, average='macro', zero_division=0)
 
-        print(f"val:loss={v_loss:.4f};")
-        print(f"val:accuracy={v_acc:.4f};")
-        print(f"val:macro_f1={v_f1:.4f};")
-        print(f"val:recall={v_rec:.4f};")
+        print(f"val:loss={v_loss:.4f};", flush=True)
+        print(f"val:accuracy={v_acc:.4f};", flush=True)
+        print(f"val:macro_f1={v_f1:.4f};", flush=True)
+        print(f"val:recall={v_rec:.4f};", flush=True)
 
-        # TensorBoard — curvas de validación en la misma gráfica que train
         writer.add_scalar('Loss/val',     v_loss, epoch)
         writer.add_scalar('Accuracy/val', v_acc,  epoch)
         writer.add_scalar('F1/val',       v_f1,   epoch)
         writer.add_scalar('Recall/val',   v_rec,  epoch)
 
-        # Guardar predicciones de la última época para la confusion matrix
         all_val_preds  = val_preds
         all_val_labels = val_labels
+
+    # === EVALUACIÓN FINAL EN TEST ===
+    print("\n--- Evaluación Final en Test ---")
+    test_preds, test_labels = [], []
+    test_acc, test_f1, test_rec = 0, 0, 0
+    if len(test_dataset) > 0:
+        model.eval()
+        with torch.no_grad():
+            for inputs, labels in test_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                _, preds = torch.max(outputs, 1)
+                test_preds.extend(preds.cpu().numpy())
+                test_labels.extend(labels.cpu().numpy())
+
+        test_acc  = accuracy_score(test_labels, test_preds)
+        test_f1   = f1_score(test_labels, test_preds, average='macro', zero_division=0)
+        test_rec  = recall_score(test_labels, test_preds, average='macro', zero_division=0)
+        print(f"test:accuracy={test_acc:.4f}; test:macro_f1={test_f1:.4f}; test:recall={test_rec:.4f};", flush=True)
+
+
+    # === REPORTE JSON PARA EL WIDGET DE CLOUDWATCH ===
+    print("\n=== REPORTE_FINAL_METRICAS ===")
+    print(json.dumps({"Conjunto": "1_Train", "Accuracy": round(t_acc, 4), "MacroF1": round(t_f1, 4), "Recall": round(t_rec, 4)}))
+    print(json.dumps({"Conjunto": "2_Val",   "Accuracy": round(v_acc, 4), "MacroF1": round(v_f1, 4), "Recall": round(v_rec, 4)}))
+    print(json.dumps({"Conjunto": "3_Test",  "Accuracy": round(test_acc, 4), "MacroF1": round(test_f1, 4), "Recall": round(test_rec, 4)}))
+    print("==============================")
 
     # ── Confusion matrix (al terminar el entrenamiento) ───────────────────────
     cm  = confusion_matrix(all_val_labels, all_val_preds, labels=list(range(num_classes)))
     fig = plot_confusion_matrix(cm, class_names, title='Confusion Matrix — Validación (última época)')
 
-    # 1. Guardar PNG en /opt/ml/output/data/ → SageMaker lo sube a S3 en output.tar.gz
     cm_path = os.path.join(OUTPUT_DATA_DIR, 'confusion_matrix.png')
     fig.savefig(cm_path, dpi=150, bbox_inches='tight')
     print(f"\nConfusion matrix guardada en: {cm_path}")
 
-    # 2. Registrar en TensorBoard como imagen (visible en la pestaña Images)
     writer.add_figure('ConfusionMatrix/val', fig, global_step=args['epochs'])
     writer.close()
 
@@ -296,20 +312,11 @@ def train(args: dict):
 
     print(f"Modelo guardado en: {args['model_dir']}")
     print("\nENTRENAMIENTO COMPLETADO")
+
     # ── Registrar URL del modelo en SSM Parameter Store ──────────────────────────
-    # Esto permite que Terraform siempre encuentre el último modelo sin hardcodear rutas
     ssm_parameter = os.environ.get('MODEL_SSM_PARAMETER')
     if ssm_parameter:
-        # SageMaker expone la ruta S3 de salida como variable de entorno
-        model_s3_uri = os.path.join(
-            os.environ.get('SM_OUTPUT_DATA_DIR', '').replace('/data', ''),
-            'model.tar.gz'
-        ).replace('/output/data/', '/output/')
-
-        # Más confiable: construirla desde las variables de SageMaker
         output_path = os.environ.get('SM_OUTPUT_DIR', '/opt/ml/output')
-        # SageMaker sube SM_MODEL_DIR como model.tar.gz al S3OutputPath del training job
-        # La URL final es: {S3OutputPath}/{TrainingJobName}/output/model.tar.gz
         training_job_name = os.environ.get('TRAINING_JOB_NAME', '')
         s3_output_path    = os.environ.get('SM_HP_S3_OUTPUT_PATH', '')
 
@@ -333,12 +340,13 @@ def train(args: dict):
 # ── 5. Punto de entrada ───────────────────────────────────────────────────────
 if __name__ == '__main__':
     args_dict = {
-        'epochs':           int(os.environ.get('SM_HP_EPOCHS', 17)),
+        'epochs':           int(os.environ.get('SM_HP_EPOCHS', 25)),
         'batch_size':       int(os.environ.get('SM_HP_BATCH_SIZE', 32)),
-        'lr':               float(os.environ.get('SM_HP_LR', 0.001)),
+        'lr':               float(os.environ.get('SM_HP_LR', 0.0005)),
         'num_classes_hint': int(os.environ.get('SM_HP_NUM_CLASSES', 10)),
         'train_dir':        os.environ.get('SM_CHANNEL_TRAIN'),
         'val_dir':          os.environ.get('SM_CHANNEL_VALIDATION'),
+        'test_dir':         os.environ.get('SM_CHANNEL_TEST'),    # INYECCIÓN: Agregado el entorno TEST
         'model_dir':        os.environ.get('SM_MODEL_DIR'),
     }
     train(args_dict)

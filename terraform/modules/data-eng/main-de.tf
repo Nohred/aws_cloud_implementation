@@ -140,9 +140,10 @@ resource "aws_iam_role_policy" "glue_job_policy" {
         "Action" : [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "cloudwatch:PutMetricData"  # ← Agrega esta línea
         ],
-        "Resource" : "arn:aws:logs:*:*:*" # Permitir acceso a CloudWatch Logs para cualquier recurso
+        "Resource" : "*" # Cambia esto a "*" para que pueda escribir las métricas
       },
       {
         Effect = "Allow"
@@ -185,6 +186,7 @@ resource "aws_glue_job" "image_resize" {
     "--output_bucket" = "${var.processed_bucket_name}"
     "--output_prefix" = "resized/"
     "--size"          = "300"
+    "--enable-metrics" = "true" # ← Faltaba esta línea
     # "--additional-python-modules" = "sagemaker,Pillow"
     # If you upload wheels to the code bucket, list them here as space-separated S3 paths
     # "--extra-py-files" = "s3://${var.code_bucket_name}/libs/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl s3://${var.code_bucket_name}/libs/Pillow-9.5.0.whl"
@@ -282,9 +284,10 @@ resource "aws_iam_role_policy" "sagemaker_execution_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "cloudwatch:PutMetricData"
         ]
-        Resource = "arn:aws:logs:*:*:log-group:/aws/sagemaker/*"
+        Resource = "*"
       },
       {
         Effect = "Allow"

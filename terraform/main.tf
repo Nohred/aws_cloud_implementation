@@ -64,3 +64,11 @@ module "ai_inference" {
   depends_on = [module.data_eng, module.storage]
 }
 
+module "monitoring" {
+  source = "./modules/monitoring" 
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  depends_on = [module.data_eng, module.ai_inference, module.storage]
+}

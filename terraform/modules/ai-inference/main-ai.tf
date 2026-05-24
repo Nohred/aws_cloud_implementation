@@ -11,7 +11,7 @@ resource "aws_s3_object" "inference_script" {
 }
 
 resource "aws_sagemaker_model" "classifier" {
-  name               = "${var.project_name}-${var.environment}-classifier-model-v9"
+  name               = "${var.project_name}-${var.environment}-classifier-model-v27"
   execution_role_arn = var.sagemaker_execution_role_arn
 
   primary_container {
@@ -25,7 +25,7 @@ resource "aws_sagemaker_model" "classifier" {
 }
 
 resource "aws_sagemaker_endpoint_configuration" "classifier" {
-  name = "${var.project_name}-${var.environment}-classifier-endpoint-config-v9"
+  name = "${var.project_name}-${var.environment}-classifier-endpoint-config-v27"
 
   production_variants {
     variant_name           = "AllTraffic"
