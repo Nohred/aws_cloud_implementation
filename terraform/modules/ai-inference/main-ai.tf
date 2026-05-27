@@ -1,6 +1,13 @@
-data "aws_ssm_parameter" "latest_model_url" {
-  name = "/${var.project_name}/${var.environment}/latest-model-url"
+resource "aws_ssm_parameter" "latest_model_url" {
+  name  = "/${var.project_name}/${var.environment}/latest-model-url"
+  type  = "String"
+  value = "placeholder"   # just a non-empty string, never accessed until model_ready = true
+
+  lifecycle {
+    ignore_changes = [value] 
+  }
 }
+#sagemaker_execution_role_arn
 
 resource "aws_s3_object" "inference_script" {
   bucket       = var.code_bucket_name
@@ -10,9 +17,11 @@ resource "aws_s3_object" "inference_script" {
   content_type = "text/x-python"
 }
 
+
 resource "aws_sagemaker_model" "classifier" {
   name               = "${var.project_name}-${var.environment}-classifier-model-v27"
   execution_role_arn = var.sagemaker_execution_role_arn
+  count = var.model_ready ? 1 : 0
 
   primary_container {
     image          = "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-sagemaker"
@@ -26,7 +35,7 @@ resource "aws_sagemaker_model" "classifier" {
 
 resource "aws_sagemaker_endpoint_configuration" "classifier" {
   name = "${var.project_name}-${var.environment}-classifier-endpoint-config-v27"
-
+  count = var.model_ready ? 1 : 0
   production_variants {
     variant_name           = "AllTraffic"
     model_name             = aws_sagemaker_model.classifier.name
@@ -235,6 +244,7 @@ resource "aws_cloudwatch_metric_alarm" "dlq_not_empty" {
 resource "aws_sagemaker_endpoint" "classifier" {
   name                 = "${var.project_name}-${var.environment}-classifier-endpoint"
   endpoint_config_name = aws_sagemaker_endpoint_configuration.classifier.name
+  count = var.model_ready ? 1 : 0
 }
 output "endpoint_name" {
   description = "El nombre del endpoint de SageMaker creado por el módulo"

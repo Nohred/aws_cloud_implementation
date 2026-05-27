@@ -56,12 +56,13 @@ module "ai_inference" {
   environment                  = var.environment
   code_bucket_name             = "${var.project_name}-${var.environment}-code-v3"
   inference_bucket_name        = "${var.project_name}-${var.environment}-inference-v3"
-  model_data_url               = "s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-6f465468-bc56-4a72-b152-0b4f45d4a276/output/model.tar.gz"
+  # model_data_url               = "s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-6f465468-bc56-4a72-b152-0b4f45d4a276/output/model.tar.gz"
   sagemaker_execution_role_arn = "arn:aws:iam::${var.account_id}:role/${var.project_name}-${var.environment}-sagemaker-execution-role"
   endpoint_instance_type       = "ml.m5.xlarge"
-  sagemaker_endpoint_name      = module.ai_inference.endpoint_name
+  sagemaker_endpoint_name = "${var.project_name}-${var.environment}-endpoint"
   notification_emails = ["julianro120404@gmail.com", "ucalderon2912@gmail.com"]
   depends_on = [module.data_eng, module.storage]
+  model_ready = false # Set to true after first training job completes to deploy the endpoint
 }
 
 module "monitoring" {

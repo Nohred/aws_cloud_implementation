@@ -24,3 +24,6 @@ __pycache__/
 *.zip
 *.rec
 *.idxgit rm --cached -r .
+
+.github/
+PROJECT_SUMMARY.md

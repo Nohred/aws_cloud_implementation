@@ -186,10 +186,8 @@ resource "aws_glue_job" "image_resize" {
     "--output_bucket" = "${var.processed_bucket_name}"
     "--output_prefix" = "resized/"
     "--size"          = "300"
-    "--enable-metrics" = "true" # ← Faltaba esta línea
-    # "--additional-python-modules" = "sagemaker,Pillow"
-    # If you upload wheels to the code bucket, list them here as space-separated S3 paths
-    # "--extra-py-files" = "s3://${var.code_bucket_name}/libs/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl s3://${var.code_bucket_name}/libs/Pillow-9.5.0.whl"
+    "--additional-python-modules" = "Pillow==10.3.0,numpy==1.26.4"
+    "--enable-metrics" = "true" 
   }
 }
 

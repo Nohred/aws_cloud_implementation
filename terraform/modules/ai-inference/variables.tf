@@ -10,9 +10,9 @@ variable "code_bucket_name" {
   type = string
 }
 
-variable "model_data_url" {
-  type = string
-}
+# variable "model_data_url" {
+#   type = string
+# }
 
 variable "sagemaker_execution_role_arn" {
   type = string
@@ -37,4 +37,10 @@ variable "notification_emails" {
   description = "Lista de correos para recibir notificaciones"
   type        = list(string)
   default     = []
+}
+
+variable "model_ready" {
+  type        = bool
+  default     = false
+  description = "Set to true after first training job completes to deploy the endpoint"
 }

@@ -22,8 +22,7 @@ Glue job (Py Spark) -> (S3 guardarlos en formato parquet)
                 endpoint
     SNS -> Notificacion al ing de machine learning que cheque el modelo.
     
-# Fase D
-CI/CD
+
 
 
 
