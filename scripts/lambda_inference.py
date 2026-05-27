@@ -5,19 +5,102 @@ import boto3
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# ── Env vars validated at cold start ──────────────────────────────────────────
 ENDPOINT_NAME = os.environ.get("SAGEMAKER_ENDPOINT_NAME")
 SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN")
+CODE_BUCKET   = os.environ.get("CODE_BUCKET")
+CLASSES_KEY   = os.environ.get("CLASSES_KEY", "models/classes.json")
 
 if not ENDPOINT_NAME:
     raise RuntimeError("Missing required env var: SAGEMAKER_ENDPOINT_NAME")
 if not SNS_TOPIC_ARN:
     raise RuntimeError("Missing required env var: SNS_TOPIC_ARN")
+if not CODE_BUCKET:
+    raise RuntimeError("Missing required env var: CODE_BUCKET")
 
+# ── AWS clients ───────────────────────────────────────────────────────────────
 s3        = boto3.client("s3")
 sagemaker = boto3.client("sagemaker-runtime")
 sns       = boto3.client("sns")
 
+# ── Load class index → name mapping once at cold start ───────────────────────
+# classes.json is written by train.py as {"cardboard": 0, "glass": 1, ...}
+# We invert it to {0: "cardboard", 1: "glass", ...}
+CLASS_NAMES = {}
+try:
+    obj = s3.get_object(Bucket=CODE_BUCKET, Key=CLASSES_KEY)
+    raw = json.loads(obj["Body"].read())
+    CLASS_NAMES = {v: k for k, v in raw.items()}
+    logger.info(f"Loaded {len(CLASS_NAMES)} classes: {list(CLASS_NAMES.values())}")
+except Exception as e:
+    logger.warning(f"Could not load classes.json from s3://{CODE_BUCKET}/{CLASSES_KEY}: {e}. Will use numeric indices.")
 
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def _confidence_label(confidence: float) -> str:
+    if confidence >= 0.80:
+        return "✅ HIGH"
+    elif confidence >= 0.50:
+        return "⚠️  MEDIUM"
+    else:
+        return "🔴 LOW — model may be uncertain"
+
+
+def _build_message(bucket: str, key: str, pred_index, confidence: float, probs_raw: dict) -> tuple[str, str]:
+    """Returns (subject, plain_text_body)."""
+    pred_name = CLASS_NAMES.get(int(pred_index) if str(pred_index).isdigit() else pred_index,
+                                 f"class_{pred_index}")
+
+    # Map numeric probability keys to class names, sort descending
+    probs_named = {}
+    for k, v in probs_raw.items():
+        name = CLASS_NAMES.get(int(k) if str(k).isdigit() else k, f"class_{k}")
+        probs_named[name] = round(v * 100, 1)
+    probs_sorted = dict(sorted(probs_named.items(), key=lambda x: x[1], reverse=True))
+
+    conf_label = _confidence_label(confidence)
+    conf_emoji = conf_label[0]  # ✅ ⚠️ or 🔴
+
+    # Top 3 candidates
+    top3 = list(probs_sorted.items())[:3]
+    top3_lines = "\n".join(
+        f"   {i+1}. {name:<16} {pct:.1f}%"
+        for i, (name, pct) in enumerate(top3)
+    )
+
+    # ASCII bar chart for full breakdown
+    bar_lines = "\n".join(
+        f"   {name:<16} {'█' * int(pct / 5):<20} {pct:.1f}%"
+        for name, pct in probs_sorted.items()
+    )
+
+    filename = key.split("/")[-1]
+
+    body = f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  WASTE CLASSIFIER — INFERENCE RESULT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  File      : {filename}
+  Location  : s3://{bucket}/{key}
+
+  Prediction  : {pred_name.upper()}
+  Confidence  : {confidence:.1%}  {conf_label}
+
+  Top 3 candidates:
+{top3_lines}
+
+  Full breakdown:
+{bar_lines}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+""".strip()
+
+    subject = f"{conf_emoji} Waste: {pred_name.upper()} ({confidence:.1%})"
+    return subject, body
+
+
+# ── Handler ───────────────────────────────────────────────────────────────────
 def handler(event, context):
     for record in event.get("Records", []):
         try:
@@ -26,7 +109,7 @@ def handler(event, context):
             s3_records = body.get("Records", [])
 
             if not s3_records:
-                logger.info(f"No S3 records in message body, skipping: {body}")
+                logger.info(f"No S3 records in message body, skipping.")
                 continue
 
             for s3_record in s3_records:
@@ -43,45 +126,44 @@ def handler(event, context):
 
                 img_bytes = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
 
-                # Explicit content-type map
                 ext = key.rsplit(".", 1)[-1].lower()
-                content_type_map = {
+                content_type = {
                     "jpg":  "image/jpeg",
                     "jpeg": "image/jpeg",
                     "png":  "image/png",
-                }
-                content_type = content_type_map.get(ext, "image/jpeg")
+                }.get(ext, "image/jpeg")
 
-                response     = sagemaker.invoke_endpoint(
+                response   = sagemaker.invoke_endpoint(
                     EndpointName=ENDPOINT_NAME,
                     ContentType=content_type,
                     Body=img_bytes
                 )
-                result       = json.loads(response["Body"].read())
-                pred_class   = result.get("predicted_class", "unknown")
-                confidence   = result.get("confidence", 0.0)
+                result     = json.loads(response["Body"].read())
 
-                message = {
-                    "imagen":         f"s3://{bucket}/{key}",
-                    "clase":          pred_class,
-                    "confianza":      f"{confidence:.1%}",
-                    "probabilidades": result.get("probabilities", {}),
-                }
+                pred_class = result.get("predicted_class", -1)
+                confidence = result.get("confidence", 0.0)
+                probs_raw  = result.get("probabilities", {})
+
+                subject, message_body = _build_message(
+                    bucket, key, pred_class, confidence, probs_raw
+                )
 
                 sns.publish(
                     TopicArn=SNS_TOPIC_ARN,
-                    Subject=f"Clasificación: {pred_class} ({confidence:.1%})",
-                    Message=json.dumps(message, indent=2, ensure_ascii=False)
+                    Subject=subject,
+                    Message=message_body
                 )
-                # ← Exact strings for CloudWatch metric filters
+
+                # ← Exact strings for CloudWatch metric filters (do not change)
                 print("SUCCESS")
-                logger.info(f"SUCCESS — {pred_class} ({confidence:.1%}) for {key}")
+                logger.info(f"SUCCESS — {subject} for {key}")
 
         except Exception as e:
+            # ← Feeds the InferenceFailure CloudWatch metric filter
             print("ERROR")
             logger.error(f"ERROR processing record: {e}\n{traceback.format_exc()}")
-            # Don't re-raise here — process remaining records, let SQS
-            # handle the failed message via visibility timeout retry → DLQ
+            # Don't re-raise — process remaining records
+            # SQS visibility timeout handles retry → DLQ after 3 failures
 
     return {"statusCode": 200, "body": "Inferencia completada"}
 

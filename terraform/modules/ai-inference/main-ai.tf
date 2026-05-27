@@ -210,6 +210,8 @@ resource "aws_lambda_function" "inference" {
     variables = {
       SAGEMAKER_ENDPOINT_NAME = var.sagemaker_endpoint_name
       SNS_TOPIC_ARN           = aws_sns_topic.predictions.arn
+      CODE_BUCKET             = var.code_bucket_name        
+      CLASSES_KEY             = "models/classes.json"       
     }
   }
 }
