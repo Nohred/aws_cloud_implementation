@@ -12,9 +12,6 @@ import boto3
 from PIL import Image
 import io
 from datetime import datetime
-import tarfile
-import os
-import cv2
 import numpy as np
 
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'input_bucket', 'output_bucket', 'size'])
@@ -57,6 +54,41 @@ def _pack_record(label: float, jpeg_bytes: bytes) -> bytes:
     content = header + jpeg_bytes
     return struct.pack('<II', _RECORDIO_MAGIC, len(content)) + content
 
+def apply_clahe_numpy(pil_img: Image.Image) -> Image.Image:
+    """CLAHE on the L channel using pure numpy — no OpenCV needed."""
+    img_np = np.array(pil_img, dtype=np.float32)
+
+    # Convert RGB → YUV-style luminance (ITU-R BT.601)
+    r, g, b = img_np[:,:,0], img_np[:,:,1], img_np[:,:,2]
+    L = (0.299 * r + 0.587 * g + 0.114 * b).astype(np.uint8)
+
+    # Tile-based histogram equalization (CLAHE approximation)
+    tile_h, tile_w = max(1, L.shape[0] // 8), max(1, L.shape[1] // 8)
+    L_eq = np.zeros_like(L)
+
+    for i in range(8):
+        for j in range(8):
+            y0, y1 = i * tile_h, (i+1) * tile_h if i < 7 else L.shape[0]
+            x0, x1 = j * tile_w, (j+1) * tile_w if j < 7 else L.shape[1]
+            tile = L[y0:y1, x0:x1]
+            hist, _ = np.histogram(tile.flatten(), bins=256, range=(0, 256))
+            # Clip limit (equivalent to clipLimit=2.0 in OpenCV)
+            clip_limit = int(2.0 * tile.size / 256)
+            excess = np.maximum(hist - clip_limit, 0).sum()
+            hist = np.minimum(hist, clip_limit) + excess // 256
+            cdf = hist.cumsum()
+            cdf_min = cdf[cdf > 0].min()
+            lut = np.round(
+                (cdf - cdf_min) / (tile.size - cdf_min) * 255
+            ).astype(np.uint8)
+            L_eq[y0:y1, x0:x1] = lut[tile]
+
+    # Blend equalized L back: scale RGB channels proportionally
+    L_orig = L.astype(np.float32) + 1e-6
+    scale = L_eq.astype(np.float32) / L_orig
+    scale = np.clip(scale, 0, 2)[:, :, np.newaxis]
+    result = np.clip(img_np * scale, 0, 255).astype(np.uint8)
+    return Image.fromarray(result, 'RGB')
 
 def get_category(path: str) -> str:
     """
@@ -121,28 +153,20 @@ def process_image(pair, class_mapping, size):
         else:
             raise TypeError(f'Payload no soportado: {type(portable)!r}')
 
+        # 1. Open + force RGB
         img = Image.open(io.BytesIO(data)).convert('RGB')
-        # img = img.resize((size, size), Image.LANCZOS)
-        # buf = io.BytesIO()
-        # img.save(buf, format='JPEG', quality=90)
+        # 2. LANCZOS resize
+        img = img.resize((size, size), Image.LANCZOS)
+        # 3. CLAHE (pure numpy — no OpenCV)
+        img = apply_clahe_numpy(img)
+        # 4. Save as JPEG q=95
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=95)
 
-        
-        bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        l_eq = clahe.apply(l)
-        lab_eq = cv2.merge([l_eq, a, b])
-        bgr_eq = cv2.cvtColor(lab_eq, cv2.COLOR_LAB2BGR)
-
-        # Back to JPEG bytes
-        success, buf_arr = cv2.imencode('.jpg', bgr_eq, [cv2.IMWRITE_JPEG_QUALITY, 95])
-        jpeg_bytes = buf_arr.tobytes()
-
-        # return (path, ('SUCCESS', _pack_record(float(label_id), buf.getvalue())))
-        return (path, ('SUCCESS', _pack_record(float(label_id), jpeg_bytes)))
+        return (path, ('SUCCESS', _pack_record(float(label_id), buf.getvalue())))
     except Exception as exc:
         return (path, ('FAILED', str(exc)))
+    
 def main():
     import tarfile
     import os

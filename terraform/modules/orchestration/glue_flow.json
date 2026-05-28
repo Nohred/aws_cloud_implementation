@@ -29,14 +29,16 @@
   },
   "CrawlerFailed": { "Type": "Fail", "Error": "CrawlerFailed", "Cause": "Glue crawler did not succeed" },
   "StartGlueJob": {
-    "Type": "Task",
-    "Resource": "arn:aws:states:::aws-sdk:glue:startJobRun",
-    "Parameters": {
-      "JobName": "${job_name}",
-      "Arguments": { "--target_batch.$": "$.target_batch" }
-    },
-    "ResultPath": "$.JobStart",
-    "Next": "WaitForJob"
+  "Type": "Task",
+  "Resource": "arn:aws:states:::aws-sdk:glue:startJobRun",
+  "Parameters": {
+    "JobName": "${job_name}",
+    "Arguments": {
+      "--target_batch.$": "$$.Execution.Input.target_batch"
+    }
+  },
+  "ResultPath": "$.JobStart",
+  "Next": "WaitForJob"
   },
   "WaitForJob": { "Type": "Wait", "Seconds": 60, "Next": "GetJobStatus" },
   "GetJobStatus": {
