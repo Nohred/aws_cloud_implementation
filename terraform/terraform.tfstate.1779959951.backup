@@ -1,0 +1,2956 @@
+{
+  "version": 4,
+  "terraform_version": "1.15.1",
+  "serial": 134,
+  "lineage": "a7a6654e-7560-e833-63b7-63bb64d94f5e",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "data",
+      "type": "aws_caller_identity",
+      "name": "current",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "account_id": "979054355848",
+            "arn": "arn:aws:sts::979054355848:assumed-role/AWSReservedSSO_AdministratorAccess_f4e51615a0cc84f7/UlisesCalderon",
+            "id": "979054355848",
+            "user_id": "AROA6H5BP4WECBURI2WWW:UlisesCalderon"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "data",
+      "type": "archive_file",
+      "name": "lambda_inference",
+      "provider": "provider[\"registry.terraform.io/hashicorp/archive\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "exclude_symlink_directories": null,
+            "excludes": null,
+            "id": "cddab38f4cd31d2fb591462bed47d585048db49d",
+            "output_base64sha256": "S0okQ1VgK6M2+x20uFxQhFQdgslhKTxEVy90nfiZ1ts=",
+            "output_base64sha512": "fsol0xFWDJTBpPpFFuEp9G/oibS+3MKop1o5XBCpQo9FrMJHH6MGZJTlYYU4Oc2jJCk7oq/K0JKqG1vsLaPMjw==",
+            "output_file_mode": null,
+            "output_md5": "98aa6a2bd0a2c2ad04e3dec88a386d5d",
+            "output_path": "modules/ai-inference/../../../build/lambda_inference.zip",
+            "output_sha": "cddab38f4cd31d2fb591462bed47d585048db49d",
+            "output_sha256": "4b4a244355602ba336fb1db4b85c5084541d82c961293c44572f749df899d6db",
+            "output_sha512": "7eca25d311560c94c1a4fa4516e129f46fe889b4bedcc2a8a75a395c10a9428f45acc2471fa3066494e561853839cda324293ba2afcad092aa1b5bec2da3cc8f",
+            "output_size": 3612,
+            "source": [],
+            "source_content": null,
+            "source_content_filename": null,
+            "source_dir": null,
+            "source_file": "modules/ai-inference/../../../scripts/lambda_inference.py",
+            "type": "zip"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "data",
+      "type": "aws_ssm_parameter",
+      "name": "latest_model_url",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "index_key": 0,
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:ssm:us-east-1:979054355848:parameter/waste-classifier/dev/latest-model-url",
+            "id": "/waste-classifier/dev/latest-model-url",
+            "insecure_value": "s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-cee38a19-3352-4f57-b5d8-dfbfbddf6460/output/model.tar.gz",
+            "name": "/waste-classifier/dev/latest-model-url",
+            "type": "String",
+            "value": "s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-cee38a19-3352-4f57-b5d8-dfbfbddf6460/output/model.tar.gz",
+            "version": 4,
+            "with_decryption": true
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "value"
+              }
+            ]
+          ],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_cloudwatch_metric_alarm",
+      "name": "dlq_not_empty",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "actions_enabled": true,
+            "alarm_actions": [
+              "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions"
+            ],
+            "alarm_description": "Hay mensajes en la DLQ de inferencia — revisar logs de Lambda",
+            "alarm_name": "waste-classifier-dev-inference-dlq-alarm",
+            "arn": "arn:aws:cloudwatch:us-east-1:979054355848:alarm:waste-classifier-dev-inference-dlq-alarm",
+            "comparison_operator": "GreaterThanThreshold",
+            "datapoints_to_alarm": 0,
+            "dimensions": {
+              "QueueName": "waste-classifier-dev-inference-dlq"
+            },
+            "evaluate_low_sample_count_percentiles": "",
+            "evaluation_periods": 1,
+            "extended_statistic": "",
+            "id": "waste-classifier-dev-inference-dlq-alarm",
+            "insufficient_data_actions": [],
+            "metric_name": "ApproximateNumberOfMessagesVisible",
+            "metric_query": [],
+            "namespace": "AWS/SQS",
+            "ok_actions": [],
+            "period": 60,
+            "statistic": "Sum",
+            "tags": {},
+            "tags_all": {},
+            "threshold": 0,
+            "threshold_metric_id": "",
+            "treat_missing_data": "notBreaching",
+            "unit": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "lambda_inference",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-lambda-inference-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-05-28T04:17:13Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "waste-classifier-dev-lambda-inference-role",
+            "inline_policy": [
+              {
+                "name": "waste-classifier-dev-lambda-inference-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-inference-v3\",\"arn:aws:s3:::waste-classifier-dev-inference-v3/*\",\"arn:aws:s3:::waste-classifier-dev-code-v3\",\"arn:aws:s3:::waste-classifier-dev-code-v3/*\"]},{\"Action\":[\"sagemaker:InvokeEndpoint\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"sns:Publish\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions\"},{\"Action\":[\"sqs:ReceiveMessage\",\"sqs:DeleteMessage\",\"sqs:GetQueueAttributes\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue\"},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:logs:*:*:*\"},{\"Action\":[\"cloudwatch:PutMetricData\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+              }
+            ],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "waste-classifier-dev-lambda-inference-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROA6H5BP4WEKHZZLTISP"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "lambda_inference",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-lambda-inference-role:waste-classifier-dev-lambda-inference-policy",
+            "name": "waste-classifier-dev-lambda-inference-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-inference-v3\",\"arn:aws:s3:::waste-classifier-dev-inference-v3/*\",\"arn:aws:s3:::waste-classifier-dev-code-v3\",\"arn:aws:s3:::waste-classifier-dev-code-v3/*\"]},{\"Action\":[\"sagemaker:InvokeEndpoint\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"sns:Publish\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions\"},{\"Action\":[\"sqs:ReceiveMessage\",\"sqs:DeleteMessage\",\"sqs:GetQueueAttributes\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue\"},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:logs:*:*:*\"},{\"Action\":[\"cloudwatch:PutMetricData\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}",
+            "role": "waste-classifier-dev-lambda-inference-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_iam_role.lambda_inference",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.ai_inference.aws_sqs_queue.inference_queue",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_lambda_event_source_mapping",
+      "name": "sqs_to_lambda",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "amazon_managed_kafka_event_source_config": [],
+            "arn": "arn:aws:lambda:us-east-1:979054355848:event-source-mapping:b299990b-8368-4325-aa35-f974ad283421",
+            "batch_size": 1,
+            "bisect_batch_on_function_error": false,
+            "destination_config": [],
+            "document_db_event_source_config": [],
+            "enabled": true,
+            "event_source_arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue",
+            "filter_criteria": [],
+            "function_arn": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-inference",
+            "function_name": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-inference",
+            "function_response_types": [],
+            "id": "b299990b-8368-4325-aa35-f974ad283421",
+            "kms_key_arn": "",
+            "last_modified": "2026-05-28T04:18:13Z",
+            "last_processing_result": "",
+            "maximum_batching_window_in_seconds": 0,
+            "maximum_record_age_in_seconds": 0,
+            "maximum_retry_attempts": 0,
+            "metrics_config": [],
+            "parallelization_factor": 0,
+            "provisioned_poller_config": [],
+            "queues": [],
+            "scaling_config": [],
+            "self_managed_event_source": [],
+            "self_managed_kafka_event_source_config": [],
+            "source_access_configuration": [],
+            "starting_position": "",
+            "starting_position_timestamp": "",
+            "state": "Enabled",
+            "state_transition_reason": "USER_INITIATED",
+            "tags": {},
+            "tags_all": {},
+            "topics": [],
+            "tumbling_window_in_seconds": 0,
+            "uuid": "b299990b-8368-4325-aa35-f974ad283421"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_iam_role.lambda_inference",
+            "module.ai_inference.aws_lambda_function.inference",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.ai_inference.aws_sqs_queue.inference_queue",
+            "module.ai_inference.data.archive_file.lambda_inference",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "inference",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-inference",
+            "code_sha256": "S0okQ1VgK6M2+x20uFxQhFQdgslhKTxEVy90nfiZ1ts=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "CLASSES_KEY": "models/classes.json",
+                  "CODE_BUCKET": "waste-classifier-dev-code-v3",
+                  "SAGEMAKER_ENDPOINT_NAME": "waste-classifier-dev-classifier-endpoint",
+                  "SNS_TOPIC_ARN": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "modules/ai-inference/../../../build/lambda_inference.zip",
+            "function_name": "waste-classifier-dev-inference",
+            "handler": "lambda_inference.handler",
+            "id": "waste-classifier-dev-inference",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-inference/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2026-05-28T09:08:53.000+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/waste-classifier-dev-inference",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-inference:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-inference:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::979054355848:role/waste-classifier-dev-lambda-inference-role",
+            "runtime": "python3.12",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "S0okQ1VgK6M2+x20uFxQhFQdgslhKTxEVy90nfiZ1ts=",
+            "source_code_size": 3612,
+            "tags": {},
+            "tags_all": {},
+            "timeout": 60,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_iam_role.lambda_inference",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.ai_inference.data.archive_file.lambda_inference",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_s3_bucket_notification",
+      "name": "inference_upload",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bucket": "waste-classifier-dev-inference-v3",
+            "eventbridge": false,
+            "id": "waste-classifier-dev-inference-v3",
+            "lambda_function": [],
+            "queue": [
+              {
+                "events": [
+                  "s3:ObjectCreated:*"
+                ],
+                "filter_prefix": "",
+                "filter_suffix": ".jpg",
+                "id": "tf-s3-queue-20260528041830563200000002",
+                "queue_arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue"
+              },
+              {
+                "events": [
+                  "s3:ObjectCreated:*"
+                ],
+                "filter_prefix": "",
+                "filter_suffix": ".jpeg",
+                "id": "tf-s3-queue-20260528041830563200000003",
+                "queue_arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue"
+              },
+              {
+                "events": [
+                  "s3:ObjectCreated:*"
+                ],
+                "filter_prefix": "",
+                "filter_suffix": ".png",
+                "id": "tf-s3-queue-20260528041830563200000004",
+                "queue_arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue"
+              }
+            ],
+            "topic": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.ai_inference.aws_sqs_queue.inference_queue",
+            "module.ai_inference.aws_sqs_queue_policy.inference_queue",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_s3_object",
+      "name": "inference_script",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acl": null,
+            "arn": "arn:aws:s3:::waste-classifier-dev-code-v3/inference/inference.py",
+            "bucket": "waste-classifier-dev-code-v3",
+            "bucket_key_enabled": false,
+            "cache_control": "",
+            "checksum_algorithm": null,
+            "checksum_crc32": "",
+            "checksum_crc32c": "",
+            "checksum_crc64nvme": "",
+            "checksum_sha1": "",
+            "checksum_sha256": "",
+            "content": null,
+            "content_base64": null,
+            "content_disposition": "",
+            "content_encoding": "",
+            "content_language": "",
+            "content_type": "text/x-python",
+            "etag": "964a9b2b189551bf3b629e3fea130019",
+            "force_destroy": false,
+            "id": "inference/inference.py",
+            "key": "inference/inference.py",
+            "kms_key_id": null,
+            "metadata": {},
+            "object_lock_legal_hold_status": "",
+            "object_lock_mode": "",
+            "object_lock_retain_until_date": "",
+            "override_provider": [],
+            "server_side_encryption": "AES256",
+            "source": "modules/ai-inference/../../../scripts/inference.py",
+            "source_hash": null,
+            "storage_class": "STANDARD",
+            "tags": {},
+            "tags_all": {},
+            "version_id": "",
+            "website_redirect": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_sagemaker_endpoint",
+      "name": "classifier",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "index_key": 0,
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sagemaker:us-east-1:979054355848:endpoint/waste-classifier-dev-classifier-endpoint",
+            "deployment_config": [],
+            "endpoint_config_name": "waste-classifier-dev-config-854fa3c0",
+            "id": "waste-classifier-dev-classifier-endpoint",
+            "name": "waste-classifier-dev-classifier-endpoint",
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "endpoint_config_name"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_sagemaker_endpoint_configuration.classifier",
+            "module.ai_inference.aws_sagemaker_model.classifier",
+            "module.ai_inference.aws_ssm_parameter.latest_model_url",
+            "module.ai_inference.data.aws_ssm_parameter.latest_model_url",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_sagemaker_model",
+      "name": "classifier",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "index_key": 0,
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sagemaker:us-east-1:979054355848:model/waste-classifier-dev-model-854fa3c0",
+            "container": [],
+            "enable_network_isolation": false,
+            "execution_role_arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-sagemaker-execution-role",
+            "id": "waste-classifier-dev-model-854fa3c0",
+            "inference_execution_config": [],
+            "name": "waste-classifier-dev-model-854fa3c0",
+            "primary_container": [
+              {
+                "container_hostname": "",
+                "environment": {
+                  "SAGEMAKER_PROGRAM": "inference.py"
+                },
+                "image": "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-sagemaker",
+                "image_config": [],
+                "inference_specification_name": "",
+                "mode": "SingleModel",
+                "model_data_source": [
+                  {
+                    "s3_data_source": [
+                      {
+                        "compression_type": "Gzip",
+                        "model_access_config": [],
+                        "s3_data_type": "S3Object",
+                        "s3_uri": "s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-cee38a19-3352-4f57-b5d8-dfbfbddf6460/output/model.tar.gz"
+                      }
+                    ]
+                  }
+                ],
+                "model_data_url": "s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-cee38a19-3352-4f57-b5d8-dfbfbddf6460/output/model.tar.gz",
+                "model_package_name": "",
+                "multi_model_config": []
+              }
+            ],
+            "tags": {},
+            "tags_all": {},
+            "vpc_config": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "name"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "primary_container"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "model_data_url"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_ssm_parameter.latest_model_url",
+            "module.ai_inference.data.aws_ssm_parameter.latest_model_url",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_sns_topic",
+      "name": "predictions",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "application_failure_feedback_role_arn": "",
+            "application_success_feedback_role_arn": "",
+            "application_success_feedback_sample_rate": 0,
+            "archive_policy": "",
+            "arn": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions",
+            "beginning_archive_time": "",
+            "content_based_deduplication": false,
+            "delivery_policy": "",
+            "display_name": "",
+            "fifo_throughput_scope": "",
+            "fifo_topic": false,
+            "firehose_failure_feedback_role_arn": "",
+            "firehose_success_feedback_role_arn": "",
+            "firehose_success_feedback_sample_rate": 0,
+            "http_failure_feedback_role_arn": "",
+            "http_success_feedback_role_arn": "",
+            "http_success_feedback_sample_rate": 0,
+            "id": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions",
+            "kms_master_key_id": "",
+            "lambda_failure_feedback_role_arn": "",
+            "lambda_success_feedback_role_arn": "",
+            "lambda_success_feedback_sample_rate": 0,
+            "name": "waste-classifier-dev-predictions",
+            "name_prefix": "",
+            "owner": "979054355848",
+            "policy": "{\"Id\":\"__default_policy_ID\",\"Statement\":[{\"Action\":[\"SNS:GetTopicAttributes\",\"SNS:SetTopicAttributes\",\"SNS:AddPermission\",\"SNS:RemovePermission\",\"SNS:DeleteTopic\",\"SNS:Subscribe\",\"SNS:ListSubscriptionsByTopic\",\"SNS:Publish\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceOwner\":\"979054355848\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Resource\":\"arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions\",\"Sid\":\"__default_statement_ID\"}],\"Version\":\"2008-10-17\"}",
+            "signature_version": 0,
+            "sqs_failure_feedback_role_arn": "",
+            "sqs_success_feedback_role_arn": "",
+            "sqs_success_feedback_sample_rate": 0,
+            "tags": {},
+            "tags_all": {},
+            "tracing_config": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_sns_topic_subscription",
+      "name": "email",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "index_key": "julianro120404@gmail.com",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions:e9443148-e9f1-4b8a-8c13-f62a924d1703",
+            "confirmation_timeout_in_minutes": 1,
+            "confirmation_was_authenticated": false,
+            "delivery_policy": "",
+            "endpoint": "julianro120404@gmail.com",
+            "endpoint_auto_confirms": false,
+            "filter_policy": "",
+            "filter_policy_scope": "",
+            "id": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions:e9443148-e9f1-4b8a-8c13-f62a924d1703",
+            "owner_id": "979054355848",
+            "pending_confirmation": false,
+            "protocol": "email",
+            "raw_message_delivery": false,
+            "redrive_policy": "",
+            "replay_policy": "",
+            "subscription_role_arn": "",
+            "topic_arn": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        },
+        {
+          "index_key": "ucalderon2912@gmail.com",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions:fc0f3cb5-483e-4577-b489-b8cdea23da96",
+            "confirmation_timeout_in_minutes": 1,
+            "confirmation_was_authenticated": false,
+            "delivery_policy": "",
+            "endpoint": "ucalderon2912@gmail.com",
+            "endpoint_auto_confirms": false,
+            "filter_policy": "",
+            "filter_policy_scope": "",
+            "id": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions:fc0f3cb5-483e-4577-b489-b8cdea23da96",
+            "owner_id": "979054355848",
+            "pending_confirmation": false,
+            "protocol": "email",
+            "raw_message_delivery": false,
+            "redrive_policy": "",
+            "replay_policy": "",
+            "subscription_role_arn": "",
+            "topic_arn": "arn:aws:sns:us-east-1:979054355848:waste-classifier-dev-predictions"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "inference_dlq",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-dlq",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-inference-dlq",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 1209600,
+            "name": "waste-classifier-dev-inference-dlq",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "",
+            "sqs_managed_sse_enabled": true,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "url": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-inference-dlq",
+            "visibility_timeout_seconds": 30
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "inference_queue",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-inference-queue",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 3600,
+            "name": "waste-classifier-dev-inference-queue",
+            "name_prefix": "",
+            "policy": "{\"Statement\":[{\"Action\":\"sqs:SendMessage\",\"Condition\":{\"ArnLike\":{\"aws:SourceArn\":\"arn:aws:s3:::waste-classifier-dev-inference-v3\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue\"}],\"Version\":\"2012-10-17\"}",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-dlq\",\"maxReceiveCount\":3}",
+            "sqs_managed_sse_enabled": true,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "url": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-inference-queue",
+            "visibility_timeout_seconds": 120
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_sqs_queue_policy",
+      "name": "inference_queue",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "id": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-inference-queue",
+            "policy": "{\"Statement\":[{\"Action\":\"sqs:SendMessage\",\"Condition\":{\"ArnLike\":{\"aws:SourceArn\":\"arn:aws:s3:::waste-classifier-dev-inference-v3\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-inference-queue\"}],\"Version\":\"2012-10-17\"}",
+            "queue_url": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-inference-queue"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.ai_inference.aws_sqs_queue.inference_queue",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.ai_inference",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "latest_model_url",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "index_key": 0,
+          "schema_version": 0,
+          "attributes": {
+            "allowed_pattern": "",
+            "arn": "arn:aws:ssm:us-east-1:979054355848:parameter/waste-classifier/dev/latest-model-url",
+            "data_type": "text",
+            "description": "",
+            "has_value_wo": null,
+            "id": "/waste-classifier/dev/latest-model-url",
+            "insecure_value": null,
+            "key_id": "",
+            "name": "/waste-classifier/dev/latest-model-url",
+            "overwrite": true,
+            "tags": {},
+            "tags_all": {},
+            "tier": "Standard",
+            "type": "String",
+            "value": "s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-cee38a19-3352-4f57-b5d8-dfbfbddf6460/output/model.tar.gz",
+            "value_wo": null,
+            "value_wo_version": null,
+            "version": 4
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "value"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "value_wo"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_glue_catalog_database",
+      "name": "main",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:glue:us-east-1:979054355848:database/waste-classifier_dev_catalog",
+            "catalog_id": "979054355848",
+            "create_table_default_permission": [
+              {
+                "permissions": [
+                  "ALL"
+                ],
+                "principal": [
+                  {
+                    "data_lake_principal_identifier": "IAM_ALLOWED_PRINCIPALS"
+                  }
+                ]
+              }
+            ],
+            "description": "",
+            "federated_database": [],
+            "id": "979054355848:waste-classifier_dev_catalog",
+            "location_uri": "",
+            "name": "waste-classifier_dev_catalog",
+            "parameters": {},
+            "tags": {},
+            "tags_all": {},
+            "target_database": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_glue_crawler",
+      "name": "raw_crawler",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:glue:us-east-1:979054355848:crawler/waste-classifier-dev-raw-crawler",
+            "catalog_target": [],
+            "classifiers": [],
+            "configuration": "",
+            "database_name": "waste-classifier_dev_catalog",
+            "delta_target": [],
+            "description": "",
+            "dynamodb_target": [],
+            "hudi_target": [],
+            "iceberg_target": [],
+            "id": "waste-classifier-dev-raw-crawler",
+            "jdbc_target": [],
+            "lake_formation_configuration": [
+              {
+                "account_id": "",
+                "use_lake_formation_credentials": false
+              }
+            ],
+            "lineage_configuration": [
+              {
+                "crawler_lineage_settings": "DISABLE"
+              }
+            ],
+            "mongodb_target": [],
+            "name": "waste-classifier-dev-raw-crawler",
+            "recrawl_policy": [
+              {
+                "recrawl_behavior": "CRAWL_EVERYTHING"
+              }
+            ],
+            "role": "waste-classifier-dev-glue-crawler-role",
+            "s3_target": [
+              {
+                "connection_name": "",
+                "dlq_event_queue_arn": "",
+                "event_queue_arn": "",
+                "exclusions": [],
+                "path": "s3://waste-classifier-dev-raw-v3/",
+                "sample_size": 0
+              }
+            ],
+            "schedule": "",
+            "schema_change_policy": [
+              {
+                "delete_behavior": "DEPRECATE_IN_DATABASE",
+                "update_behavior": "UPDATE_IN_DATABASE"
+              }
+            ],
+            "security_configuration": "",
+            "table_prefix": "",
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_glue_job",
+      "name": "image_resize",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:glue:us-east-1:979054355848:job/waste-classifier-dev-image-resize",
+            "command": [
+              {
+                "name": "glueetl",
+                "python_version": "3",
+                "runtime": "",
+                "script_location": "s3://waste-classifier-dev-code-v3/scripts/glue_etl.py"
+              }
+            ],
+            "connections": [],
+            "default_arguments": {
+              "--TempDir": "s3://waste-classifier-dev-code-v3/temp/",
+              "--additional-python-modules": "Pillow==10.3.0,numpy\u003e=1.24",
+              "--enable-metrics": "true",
+              "--input_bucket": "waste-classifier-dev-raw-v3",
+              "--output_bucket": "waste-classifier-dev-processed-v3",
+              "--output_prefix": "resized/",
+              "--size": "300"
+            },
+            "description": "",
+            "execution_class": "",
+            "execution_property": [
+              {
+                "max_concurrent_runs": 1
+              }
+            ],
+            "glue_version": "5.1",
+            "id": "waste-classifier-dev-image-resize",
+            "job_run_queuing_enabled": false,
+            "maintenance_window": "",
+            "max_capacity": 16,
+            "max_retries": 0,
+            "name": "waste-classifier-dev-image-resize",
+            "non_overridable_arguments": {},
+            "notification_property": [],
+            "number_of_workers": 8,
+            "role_arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-glue-job-role",
+            "security_configuration": "",
+            "source_control_details": [],
+            "tags": {},
+            "tags_all": {},
+            "timeout": 480,
+            "worker_type": "G.2X"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "glue_crawler_role",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-glue-crawler-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-05-28T04:17:02Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "waste-classifier-dev-glue-crawler-role",
+            "inline_policy": [
+              {
+                "name": "waste-classifier-dev-glue-crawler-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-raw-v3\",\"arn:aws:s3:::waste-classifier-dev-raw-v3/*\"]},{\"Action\":[\"glue:GetDatabase\",\"glue:GetDatabases\",\"glue:CreateTable\",\"glue:GetTable\",\"glue:GetTables\",\"glue:UpdateTable\",\"glue:DeleteTable\",\"glue:BatchCreatePartition\",\"glue:CreatePartition\",\"glue:UpdatePartition\",\"glue:DeletePartition\",\"glue:GetPartition\",\"glue:GetPartitions\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:logs:*:*:*\"}]}"
+              }
+            ],
+            "managed_policy_arns": [
+              "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+            ],
+            "max_session_duration": 3600,
+            "name": "waste-classifier-dev-glue-crawler-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROA6H5BP4WEBWHFILRC6"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "glue_job_role",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-glue-job-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-05-28T04:17:02Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "waste-classifier-dev-glue-job-role",
+            "inline_policy": [
+              {
+                "name": "waste-classifier-dev-glue-job-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\",\"cloudwatch:PutMetricData\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-raw-v3\",\"arn:aws:s3:::waste-classifier-dev-raw-v3/*\",\"arn:aws:s3:::waste-classifier-dev-processed-v3\",\"arn:aws:s3:::waste-classifier-dev-processed-v3/*\",\"arn:aws:s3:::waste-classifier-dev-code-v3\",\"arn:aws:s3:::waste-classifier-dev-code-v3/*\"]}]}"
+              }
+            ],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "waste-classifier-dev-glue-job-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROA6H5BP4WEOQ3DVOJOB"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "sagemaker_execution_role",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-sagemaker-execution-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sagemaker.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-05-28T04:17:02Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "waste-classifier-dev-sagemaker-execution-role",
+            "inline_policy": [
+              {
+                "name": "waste-classifier-dev-sagemaker-execution-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-processed-v3\",\"arn:aws:s3:::waste-classifier-dev-processed-v3/*\",\"arn:aws:s3:::waste-classifier-dev-code-v3\",\"arn:aws:s3:::waste-classifier-dev-code-v3/*\"]},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\",\"cloudwatch:PutMetricData\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"ecr:GetAuthorizationToken\",\"ecr:GetDownloadUrlForLayer\",\"ecr:BatchGetImage\",\"ecr:BatchCheckLayerAvailability\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"ssm:PutParameter\",\"ssm:GetParameter\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ssm:us-east-1:979054355848:parameter/waste-classifier/dev/*\"}]}"
+              }
+            ],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "waste-classifier-dev-sagemaker-execution-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROA6H5BP4WEAEWC74G7F"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "glue_crawler_policy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-glue-crawler-role:waste-classifier-dev-glue-crawler-policy",
+            "name": "waste-classifier-dev-glue-crawler-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-raw-v3\",\"arn:aws:s3:::waste-classifier-dev-raw-v3/*\"]},{\"Action\":[\"glue:GetDatabase\",\"glue:GetDatabases\",\"glue:CreateTable\",\"glue:GetTable\",\"glue:GetTables\",\"glue:UpdateTable\",\"glue:DeleteTable\",\"glue:BatchCreatePartition\",\"glue:CreatePartition\",\"glue:UpdatePartition\",\"glue:DeletePartition\",\"glue:GetPartition\",\"glue:GetPartitions\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:logs:*:*:*\"}]}",
+            "role": "waste-classifier-dev-glue-crawler-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "glue_job_policy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-glue-job-role:waste-classifier-dev-glue-job-policy",
+            "name": "waste-classifier-dev-glue-job-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\",\"cloudwatch:PutMetricData\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-raw-v3\",\"arn:aws:s3:::waste-classifier-dev-raw-v3/*\",\"arn:aws:s3:::waste-classifier-dev-processed-v3\",\"arn:aws:s3:::waste-classifier-dev-processed-v3/*\",\"arn:aws:s3:::waste-classifier-dev-code-v3\",\"arn:aws:s3:::waste-classifier-dev-code-v3/*\"]}]}",
+            "role": "waste-classifier-dev-glue-job-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "sagemaker_execution_policy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-sagemaker-execution-role:waste-classifier-dev-sagemaker-execution-policy",
+            "name": "waste-classifier-dev-sagemaker-execution-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::waste-classifier-dev-processed-v3\",\"arn:aws:s3:::waste-classifier-dev-processed-v3/*\",\"arn:aws:s3:::waste-classifier-dev-code-v3\",\"arn:aws:s3:::waste-classifier-dev-code-v3/*\"]},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\",\"cloudwatch:PutMetricData\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"ecr:GetAuthorizationToken\",\"ecr:GetDownloadUrlForLayer\",\"ecr:BatchGetImage\",\"ecr:BatchCheckLayerAvailability\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"ssm:PutParameter\",\"ssm:GetParameter\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ssm:us-east-1:979054355848:parameter/waste-classifier/dev/*\"}]}",
+            "role": "waste-classifier-dev-sagemaker-execution-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_iam_role_policy_attachment",
+      "name": "glue_crawler_service",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-glue-crawler-role-20260528041703147100000001",
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole",
+            "role": "waste-classifier-dev-glue-crawler-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_s3_object",
+      "name": "glue_script",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acl": null,
+            "arn": "arn:aws:s3:::waste-classifier-dev-code-v3/scripts/glue_etl.py",
+            "bucket": "waste-classifier-dev-code-v3",
+            "bucket_key_enabled": false,
+            "cache_control": "",
+            "checksum_algorithm": null,
+            "checksum_crc32": "",
+            "checksum_crc32c": "",
+            "checksum_crc64nvme": "",
+            "checksum_sha1": "",
+            "checksum_sha256": "",
+            "content": null,
+            "content_base64": null,
+            "content_disposition": "",
+            "content_encoding": "",
+            "content_language": "",
+            "content_type": "text/x-python",
+            "etag": "3be368154621de6553c4609a76fbd6c6",
+            "force_destroy": false,
+            "id": "scripts/glue_etl.py",
+            "key": "scripts/glue_etl.py",
+            "kms_key_id": null,
+            "metadata": {},
+            "object_lock_legal_hold_status": "",
+            "object_lock_mode": "",
+            "object_lock_retain_until_date": "",
+            "override_provider": [],
+            "server_side_encryption": "AES256",
+            "source": "modules/data-eng/../../../scripts/glue_etl.py",
+            "source_hash": null,
+            "storage_class": "STANDARD",
+            "tags": {},
+            "tags_all": {},
+            "version_id": "",
+            "website_redirect": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "aws_s3_object",
+      "name": "train_script",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acl": null,
+            "arn": "arn:aws:s3:::waste-classifier-dev-code-v3/training/sourcedir.tar.gz",
+            "bucket": "waste-classifier-dev-code-v3",
+            "bucket_key_enabled": false,
+            "cache_control": "",
+            "checksum_algorithm": null,
+            "checksum_crc32": "",
+            "checksum_crc32c": "",
+            "checksum_crc64nvme": "",
+            "checksum_sha1": "",
+            "checksum_sha256": "",
+            "content": null,
+            "content_base64": null,
+            "content_disposition": "",
+            "content_encoding": "",
+            "content_language": "",
+            "content_type": "application/x-tar",
+            "etag": "2b0e681de41a822841d76511cb4831e6",
+            "force_destroy": false,
+            "id": "training/sourcedir.tar.gz",
+            "key": "training/sourcedir.tar.gz",
+            "kms_key_id": null,
+            "metadata": {},
+            "object_lock_legal_hold_status": "",
+            "object_lock_mode": "",
+            "object_lock_retain_until_date": "",
+            "override_provider": [],
+            "server_side_encryption": "AES256",
+            "source": "modules/data-eng/../../../scripts/sourcedir.tar.gz",
+            "source_hash": null,
+            "storage_class": "STANDARD",
+            "tags": {},
+            "tags_all": {},
+            "version_id": "",
+            "website_redirect": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.data_eng",
+      "mode": "managed",
+      "type": "terraform_data",
+      "name": "pack_train_tar",
+      "provider": "provider[\"terraform.io/builtin/terraform\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "d0f5fd73-8206-06c9-d6f2-8055bc98f75f",
+            "input": null,
+            "output": null,
+            "triggers_replace": {
+              "value": [
+                "03c6e33c48846fb41e6ac62332f37e82",
+                "b546051e2f14d174925a81b2d866cef0"
+              ],
+              "type": [
+                "tuple",
+                [
+                  "string",
+                  "string"
+                ]
+              ]
+            }
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "dependencies": [
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.monitoring",
+      "mode": "managed",
+      "type": "aws_cloudwatch_dashboard",
+      "name": "main",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "dashboard_arn": "arn:aws:cloudwatch::979054355848:dashboard/waste-classifier-dev-monitoring-dashboard",
+            "dashboard_body": "{\"widgets\":[{\"height\":6,\"properties\":{\"metrics\":[[{\"expression\":\"SEARCH('Namespace=\\\"Glue\\\" MetricName=\\\"glue.driver.aggregate.elapsedTime\\\" JobName=\\\"waste-classifier-dev-image-resize\\\"', 'Average', 300)\",\"id\":\"e1\",\"label\":\"Elapsed Time (ms)\"}]],\"period\":300,\"region\":\"us-east-1\",\"stacked\":false,\"stat\":\"Average\",\"title\":\"Widget 1: Duración de Glue Job (Image Resize)\",\"view\":\"timeSeries\",\"yAxis\":{\"left\":{\"label\":\"Milisegundos\",\"min\":0}}},\"type\":\"metric\",\"width\":12,\"x\":0,\"y\":0},{\"height\":6,\"properties\":{\"metrics\":[[\"AWS/S3\",\"NumberOfObjects\",\"StorageType\",\"AllStorageTypes\",\"BucketName\",\"waste-classifier-dev-processed-v3\"]],\"period\":86400,\"region\":\"us-east-1\",\"stat\":\"Maximum\",\"title\":\"Widget 2: Archivos en Curated Zone (Processed v3) — rango mínimo: 1d\",\"view\":\"singleValue\"},\"type\":\"metric\",\"width\":12,\"x\":12,\"y\":0},{\"height\":6,\"properties\":{\"metrics\":[[\"AWS/SageMaker\",\"Invocations\",\"EndpointName\",\"waste-classifier-dev-classifier-endpoint\",\"VariantName\",\"AllTraffic\",{\"color\":\"#2ca02c\",\"label\":\"Invocaciones totales\"}],[\"AWS/SageMaker\",\"Invocation4XXErrors\",\"EndpointName\",\"waste-classifier-dev-classifier-endpoint\",\"VariantName\",\"AllTraffic\",{\"color\":\"#ff7f0e\",\"label\":\"Errores 4XX (cliente)\"}],[\"AWS/SageMaker\",\"Invocation5XXErrors\",\"EndpointName\",\"waste-classifier-dev-classifier-endpoint\",\"VariantName\",\"AllTraffic\",{\"color\":\"#d62728\",\"label\":\"Errores 5XX (modelo)\"}]],\"period\":60,\"region\":\"us-east-1\",\"stacked\":false,\"stat\":\"Sum\",\"title\":\"Widget 3: Errores en SageMaker Endpoint (4XX y 5XX)\",\"view\":\"timeSeries\"},\"type\":\"metric\",\"width\":12,\"x\":0,\"y\":6},{\"height\":6,\"properties\":{\"metrics\":[[\"AWS/SageMaker\",\"ModelLatency\",\"EndpointName\",\"waste-classifier-dev-classifier-endpoint\",\"VariantName\",\"AllTraffic\",{\"color\":\"#9467bd\",\"label\":\"Latencia del Modelo (µs)\"}],[\"AWS/SageMaker\",\"OverheadLatency\",\"EndpointName\",\"waste-classifier-dev-classifier-endpoint\",\"VariantName\",\"AllTraffic\",{\"color\":\"#bcbd22\",\"label\":\"Overhead SageMaker (µs)\"}]],\"period\":60,\"region\":\"us-east-1\",\"stacked\":false,\"stat\":\"Average\",\"title\":\"Tiempo Real de Inferencia (Model Latency)\",\"view\":\"timeSeries\",\"yAxis\":{\"left\":{\"label\":\"Microsegundos (µs)\",\"min\":0}}},\"type\":\"metric\",\"width\":12,\"x\":12,\"y\":6},{\"height\":6,\"properties\":{\"metrics\":[[\"WasteClassifier/Metrics\",\"InferenceSuccess\",{\"color\":\"#2ca02c\",\"label\":\"Éxito\"}],[\"WasteClassifier/Metrics\",\"InferenceFailure\",{\"color\":\"#d62728\",\"label\":\"Fallo\"}]],\"period\":300,\"region\":\"us-east-1\",\"stacked\":false,\"stat\":\"Sum\",\"title\":\"Imágenes procesadas con éxito vs fallidas\",\"view\":\"timeSeries\"},\"type\":\"metric\",\"width\":12,\"x\":0,\"y\":12},{\"height\":6,\"properties\":{\"metrics\":[[\"AWS/S3\",\"BucketSizeBytes\",\"StorageType\",\"StandardStorage\",\"BucketName\",\"waste-classifier-dev-processed-v3\",{\"id\":\"m1\",\"visible\":false}],[\"AWS/S3\",\"NumberOfObjects\",\"StorageType\",\"AllStorageTypes\",\"BucketName\",\"waste-classifier-dev-processed-v3\",{\"id\":\"m2\",\"visible\":false}],[{\"expression\":\"m1/m2\",\"id\":\"e1\",\"label\":\"Promedio Bytes por Archivo\",\"region\":\"us-east-1\"}]],\"period\":86400,\"region\":\"us-east-1\",\"stat\":\"Average\",\"title\":\"Tamaño Promedio de Archivos en Processed (Bytes) — rango mínimo: 1d\",\"view\":\"singleValue\"},\"type\":\"metric\",\"width\":12,\"x\":12,\"y\":12},{\"height\":6,\"properties\":{\"metrics\":[[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"train:loss\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e1\",\"label\":\"train:loss\"}],[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"val:loss\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e2\",\"label\":\"val:loss\"}]],\"period\":60,\"region\":\"us-east-1\",\"stat\":\"Average\",\"title\":\"Pérdida / Loss (Train vs Validation)\",\"view\":\"timeSeries\"},\"type\":\"metric\",\"width\":12,\"x\":0,\"y\":18},{\"height\":6,\"properties\":{\"metrics\":[[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"train:accuracy\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e3\",\"label\":\"train:accuracy\"}],[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"val:accuracy\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e4\",\"label\":\"val:accuracy\"}]],\"period\":60,\"region\":\"us-east-1\",\"stat\":\"Average\",\"title\":\"Exactitud / Accuracy (Train vs Validation)\",\"view\":\"timeSeries\"},\"type\":\"metric\",\"width\":12,\"x\":12,\"y\":18},{\"height\":6,\"properties\":{\"metrics\":[[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"train:macro_f1\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e5\",\"label\":\"train:macro_f1\"}],[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"val:macro_f1\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e6\",\"label\":\"val:macro_f1\"}]],\"period\":60,\"region\":\"us-east-1\",\"stat\":\"Average\",\"title\":\"Macro F1 Score (Train vs Validation)\",\"view\":\"timeSeries\"},\"type\":\"metric\",\"width\":12,\"x\":0,\"y\":24},{\"height\":6,\"properties\":{\"metrics\":[[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"train:recall\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e7\",\"label\":\"train:recall\"}],[{\"expression\":\"SEARCH('{/aws/sagemaker/TrainingJobs,TrainingJobName} MetricName=\\\"val:recall\\\" TrainingJobName=~\\\"waste-classifier-*\\\"', 'Average', 60)\",\"id\":\"e8\",\"label\":\"val:recall\"}]],\"period\":60,\"region\":\"us-east-1\",\"stat\":\"Average\",\"title\":\"Sensibilidad / Recall (Train vs Validation)\",\"view\":\"timeSeries\"},\"type\":\"metric\",\"width\":12,\"x\":12,\"y\":24},{\"height\":6,\"properties\":{\"query\":\"SOURCE '/aws/sagemaker/TrainingJobs' | filter @message like /\\\"Conjunto\\\"/ | display Conjunto, Accuracy, MacroF1, Recall | sort @timestamp desc | limit 3\",\"region\":\"us-east-1\",\"title\":\"Resumen de Evaluación Final (Último Entrenamiento)\",\"view\":\"table\"},\"type\":\"log\",\"width\":24,\"x\":0,\"y\":30}]}",
+            "dashboard_name": "waste-classifier-dev-monitoring-dashboard",
+            "id": "waste-classifier-dev-monitoring-dashboard"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_cloudwatch_metric_alarm.dlq_not_empty",
+            "module.ai_inference.aws_iam_role.lambda_inference",
+            "module.ai_inference.aws_iam_role_policy.lambda_inference",
+            "module.ai_inference.aws_lambda_event_source_mapping.sqs_to_lambda",
+            "module.ai_inference.aws_lambda_function.inference",
+            "module.ai_inference.aws_s3_bucket_notification.inference_upload",
+            "module.ai_inference.aws_s3_object.inference_script",
+            "module.ai_inference.aws_sagemaker_endpoint.classifier",
+            "module.ai_inference.aws_sagemaker_endpoint_configuration.classifier",
+            "module.ai_inference.aws_sagemaker_model.classifier",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.ai_inference.aws_sns_topic_subscription.email",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.ai_inference.aws_sqs_queue.inference_queue",
+            "module.ai_inference.aws_sqs_queue_policy.inference_queue",
+            "module.ai_inference.aws_ssm_parameter.latest_model_url",
+            "module.ai_inference.data.archive_file.lambda_inference",
+            "module.ai_inference.data.aws_ssm_parameter.latest_model_url",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.monitoring",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_metric_filter",
+      "name": "inference_failure",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-inference-failure",
+            "log_group_name": "/aws/lambda/waste-classifier-dev-inference",
+            "metric_transformation": [
+              {
+                "default_value": "",
+                "dimensions": {},
+                "name": "InferenceFailure",
+                "namespace": "WasteClassifier/Metrics",
+                "unit": "None",
+                "value": "1"
+              }
+            ],
+            "name": "waste-classifier-dev-inference-failure",
+            "pattern": "\"ERROR\""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_cloudwatch_metric_alarm.dlq_not_empty",
+            "module.ai_inference.aws_iam_role.lambda_inference",
+            "module.ai_inference.aws_iam_role_policy.lambda_inference",
+            "module.ai_inference.aws_lambda_event_source_mapping.sqs_to_lambda",
+            "module.ai_inference.aws_lambda_function.inference",
+            "module.ai_inference.aws_s3_bucket_notification.inference_upload",
+            "module.ai_inference.aws_s3_object.inference_script",
+            "module.ai_inference.aws_sagemaker_endpoint.classifier",
+            "module.ai_inference.aws_sagemaker_endpoint_configuration.classifier",
+            "module.ai_inference.aws_sagemaker_model.classifier",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.ai_inference.aws_sns_topic_subscription.email",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.ai_inference.aws_sqs_queue.inference_queue",
+            "module.ai_inference.aws_sqs_queue_policy.inference_queue",
+            "module.ai_inference.aws_ssm_parameter.latest_model_url",
+            "module.ai_inference.data.archive_file.lambda_inference",
+            "module.ai_inference.data.aws_ssm_parameter.latest_model_url",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.monitoring",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_metric_filter",
+      "name": "inference_success",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-inference-success",
+            "log_group_name": "/aws/lambda/waste-classifier-dev-inference",
+            "metric_transformation": [
+              {
+                "default_value": "",
+                "dimensions": {},
+                "name": "InferenceSuccess",
+                "namespace": "WasteClassifier/Metrics",
+                "unit": "None",
+                "value": "1"
+              }
+            ],
+            "name": "waste-classifier-dev-inference-success",
+            "pattern": "\"SUCCESS\""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_caller_identity.current",
+            "module.ai_inference.aws_cloudwatch_metric_alarm.dlq_not_empty",
+            "module.ai_inference.aws_iam_role.lambda_inference",
+            "module.ai_inference.aws_iam_role_policy.lambda_inference",
+            "module.ai_inference.aws_lambda_event_source_mapping.sqs_to_lambda",
+            "module.ai_inference.aws_lambda_function.inference",
+            "module.ai_inference.aws_s3_bucket_notification.inference_upload",
+            "module.ai_inference.aws_s3_object.inference_script",
+            "module.ai_inference.aws_sagemaker_endpoint.classifier",
+            "module.ai_inference.aws_sagemaker_endpoint_configuration.classifier",
+            "module.ai_inference.aws_sagemaker_model.classifier",
+            "module.ai_inference.aws_sns_topic.predictions",
+            "module.ai_inference.aws_sns_topic_subscription.email",
+            "module.ai_inference.aws_sqs_queue.inference_dlq",
+            "module.ai_inference.aws_sqs_queue.inference_queue",
+            "module.ai_inference.aws_sqs_queue_policy.inference_queue",
+            "module.ai_inference.aws_ssm_parameter.latest_model_url",
+            "module.ai_inference.data.archive_file.lambda_inference",
+            "module.ai_inference.data.aws_ssm_parameter.latest_model_url",
+            "module.data_eng.aws_glue_catalog_database.main",
+            "module.data_eng.aws_glue_crawler.raw_crawler",
+            "module.data_eng.aws_glue_job.image_resize",
+            "module.data_eng.aws_iam_role.glue_crawler_role",
+            "module.data_eng.aws_iam_role.glue_job_role",
+            "module.data_eng.aws_iam_role.sagemaker_execution_role",
+            "module.data_eng.aws_iam_role_policy.glue_crawler_policy",
+            "module.data_eng.aws_iam_role_policy.glue_job_policy",
+            "module.data_eng.aws_iam_role_policy.sagemaker_execution_policy",
+            "module.data_eng.aws_iam_role_policy_attachment.glue_crawler_service",
+            "module.data_eng.aws_s3_object.glue_script",
+            "module.data_eng.aws_s3_object.train_script",
+            "module.data_eng.terraform_data.pack_train_tar",
+            "module.storage.aws_s3_bucket.code",
+            "module.storage.aws_s3_bucket.inference",
+            "module.storage.aws_s3_bucket.processed",
+            "module.storage.aws_s3_bucket.raw"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "data",
+      "type": "archive_file",
+      "name": "lambda_dedup_zip",
+      "provider": "provider[\"registry.terraform.io/hashicorp/archive\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "exclude_symlink_directories": null,
+            "excludes": null,
+            "id": "576a46478972b74f62fdf20a67ea833fc12b7ce1",
+            "output_base64sha256": "2pYUp90qIbqYdwRPy2dknAWqfOAtHm2XFOzVGgL7xXU=",
+            "output_base64sha512": "3CclDdEnZOgUQ0TQVA5W/t+/ODN3Drax82hf5TL74+Y5/O8BQBTEGYMKB/8TzyhimzZZK/xzsGwtWrw3UJvycA==",
+            "output_file_mode": null,
+            "output_md5": "5e237fd79bf02daa6653bb53a6412c58",
+            "output_path": "./../scripts/lambda_deduplicator.zip",
+            "output_sha": "576a46478972b74f62fdf20a67ea833fc12b7ce1",
+            "output_sha256": "da9614a7dd2a21ba9877044fcb67649c05aa7ce02d1e6d9714ecd51a02fbc575",
+            "output_sha512": "dc27250dd12764e8144344d0540e56fedfbf3833770eb6b1f3685fe532fbe3e639fcef014014c419830a07ff13cf28629b36592bfc73b06c2d5abc37509bf270",
+            "output_size": 3890,
+            "source": [],
+            "source_content": null,
+            "source_content_filename": null,
+            "source_dir": null,
+            "source_file": "./../scripts/lambda_deduplicator.py",
+            "type": "zip"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "data",
+      "type": "aws_caller_identity",
+      "name": "current",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "account_id": "979054355848",
+            "arn": "arn:aws:sts::979054355848:assumed-role/AWSReservedSSO_AdministratorAccess_f4e51615a0cc84f7/UlisesCalderon",
+            "id": "979054355848",
+            "user_id": "AROA6H5BP4WECBURI2WWW:UlisesCalderon"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_cloudwatch_event_rule",
+      "name": "s3_raw_upload",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "arn": "arn:aws:events:us-east-1:979054355848:rule/waste-classifier-dev-s3-raw-upload",
+            "description": "Trigger ETL workflow on new file upload to raw bucket",
+            "event_bus_name": "default",
+            "event_pattern": "{\"detail\":{\"bucket\":{\"name\":[\"waste-classifier-dev-raw-v3\"]}},\"detail-type\":[\"Object Created\"],\"source\":[\"aws.s3\"]}",
+            "force_destroy": false,
+            "id": "waste-classifier-dev-s3-raw-upload",
+            "is_enabled": true,
+            "name": "waste-classifier-dev-s3-raw-upload",
+            "name_prefix": "",
+            "role_arn": "",
+            "schedule_expression": "",
+            "state": "ENABLED",
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ=="
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_cloudwatch_event_target",
+      "name": "sqs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "appsync_target": [],
+            "arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger",
+            "batch_target": [],
+            "dead_letter_config": [],
+            "ecs_target": [],
+            "event_bus_name": "default",
+            "force_destroy": false,
+            "http_target": [],
+            "id": "waste-classifier-dev-s3-raw-upload-SqsTriggerTarget",
+            "input": "",
+            "input_path": "",
+            "input_transformer": [],
+            "kinesis_target": [],
+            "redshift_target": [],
+            "retry_policy": [],
+            "role_arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-eventbridge-role",
+            "rule": "waste-classifier-dev-s3-raw-upload",
+            "run_command_targets": [],
+            "sagemaker_pipeline_target": [],
+            "sqs_target": [],
+            "target_id": "SqsTriggerTarget"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "module.orchestration.aws_cloudwatch_event_rule.s3_raw_upload",
+            "module.orchestration.aws_iam_role.eventbridge_role",
+            "module.orchestration.aws_sqs_queue.etl_trigger"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "step_functions",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:us-east-1:979054355848:log-group:/aws/states/waste-classifier-dev-etl-orchestration",
+            "id": "/aws/states/waste-classifier-dev-etl-orchestration",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/states/waste-classifier-dev-etl-orchestration",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "eventbridge_role",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-eventbridge-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"events.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-05-28T04:17:00Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "waste-classifier-dev-eventbridge-role",
+            "inline_policy": [
+              {
+                "name": "waste-classifier-dev-eventbridge-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"sqs:SendMessage\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger\"}]}"
+              }
+            ],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "waste-classifier-dev-eventbridge-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROA6H5BP4WELBPXESQSG"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "lambda_dedup_role",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-lambda-dedup-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-05-28T04:17:00Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "waste-classifier-dev-lambda-dedup-role",
+            "inline_policy": [
+              {
+                "name": "waste-classifier-dev-lambda-dedup-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"sqs:ReceiveMessage\",\"sqs:DeleteMessage\",\"sqs:GetQueueAttributes\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger\"},{\"Action\":[\"states:ListExecutions\",\"states:StartExecution\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:states:us-east-1:979054355848:stateMachine:waste-classifier-dev-etl-orchestration\"},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:logs:*:*:*\"},{\"Action\":[\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:s3:::waste-classifier-dev-raw-v3\"},{\"Action\":[\"ssm:GetParameter\",\"ssm:PutParameter\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ssm:*:*:parameter/waste-classifier/dev/*\"},{\"Action\":[\"cloudwatch:GetMetricStatistics\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+              }
+            ],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "waste-classifier-dev-lambda-dedup-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROA6H5BP4WEK5IRTXXUR"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "step_functions_role",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-step-functions-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"states.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-05-28T04:17:00Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "waste-classifier-dev-step-functions-role",
+            "inline_policy": [
+              {
+                "name": "waste-classifier-dev-sfn-sagemaker-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"sagemaker:CreateTrainingJob\",\"sagemaker:DescribeTrainingJob\",\"sagemaker:StopTrainingJob\",\"sagemaker:AddTags\",\"sagemaker:UpdateTrainingJob\",\"sagemaker:CreateModel\",\"sagemaker:DeleteModel\",\"sagemaker:CreateEndpointConfig\",\"sagemaker:DeleteEndpointConfig\",\"sagemaker:UpdateEndpoint\",\"sagemaker:DescribeEndpoint\",\"sagemaker:DescribeEndpointConfig\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":\"iam:PassRole\",\"Condition\":{\"StringEquals\":{\"iam:PassedToService\":\"sagemaker.amazonaws.com\"}},\"Effect\":\"Allow\",\"Resource\":\"arn:aws:iam::979054355848:role/waste-classifier-dev-sagemaker-execution-role\"},{\"Action\":[\"events:PutTargets\",\"events:PutRule\",\"events:DescribeRule\",\"events:DeleteRule\",\"events:RemoveTargets\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"ssm:PutParameter\",\"ssm:GetParameter\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ssm:*:*:parameter/waste-classifier/dev/*\"}]}"
+              },
+              {
+                "name": "waste-classifier-dev-step-functions-policy",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"glue:StartCrawler\",\"glue:GetCrawler\",\"glue:StartJobRun\",\"glue:GetJobRun\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:glue:*:*:crawler/waste-classifier-dev-raw-crawler\",\"arn:aws:glue:*:*:job/waste-classifier-dev-image-resize\"]},{\"Action\":[\"logs:CreateLogDelivery\",\"logs:GetLogDelivery\",\"logs:UpdateLogDelivery\",\"logs:DeleteLogDelivery\",\"logs:ListLogDeliveries\",\"logs:PutResourcePolicy\",\"logs:DescribeResourcePolicies\",\"logs:DescribeLogGroups\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+              }
+            ],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "waste-classifier-dev-step-functions-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROA6H5BP4WEIZCYELPSP"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "eventbridge_policy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-eventbridge-role:waste-classifier-dev-eventbridge-policy",
+            "name": "waste-classifier-dev-eventbridge-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"sqs:SendMessage\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger\"}]}",
+            "role": "waste-classifier-dev-eventbridge-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.orchestration.aws_iam_role.eventbridge_role",
+            "module.orchestration.aws_sqs_queue.etl_trigger"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "lambda_dedup_policy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-lambda-dedup-role:waste-classifier-dev-lambda-dedup-policy",
+            "name": "waste-classifier-dev-lambda-dedup-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"sqs:ReceiveMessage\",\"sqs:DeleteMessage\",\"sqs:GetQueueAttributes\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger\"},{\"Action\":[\"states:ListExecutions\",\"states:StartExecution\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:states:us-east-1:979054355848:stateMachine:waste-classifier-dev-etl-orchestration\"},{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:logs:*:*:*\"},{\"Action\":[\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:s3:::waste-classifier-dev-raw-v3\"},{\"Action\":[\"ssm:GetParameter\",\"ssm:PutParameter\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ssm:*:*:parameter/waste-classifier/dev/*\"},{\"Action\":[\"cloudwatch:GetMetricStatistics\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}",
+            "role": "waste-classifier-dev-lambda-dedup-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.orchestration.aws_cloudwatch_log_group.step_functions",
+            "module.orchestration.aws_iam_role.lambda_dedup_role",
+            "module.orchestration.aws_iam_role.step_functions_role",
+            "module.orchestration.aws_sfn_state_machine.etl_orchestration",
+            "module.orchestration.aws_sqs_queue.etl_trigger",
+            "module.orchestration.data.aws_caller_identity.current"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "step_functions_policy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-step-functions-role:waste-classifier-dev-step-functions-policy",
+            "name": "waste-classifier-dev-step-functions-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"glue:StartCrawler\",\"glue:GetCrawler\",\"glue:StartJobRun\",\"glue:GetJobRun\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:glue:*:*:crawler/waste-classifier-dev-raw-crawler\",\"arn:aws:glue:*:*:job/waste-classifier-dev-image-resize\"]},{\"Action\":[\"logs:CreateLogDelivery\",\"logs:GetLogDelivery\",\"logs:UpdateLogDelivery\",\"logs:DeleteLogDelivery\",\"logs:ListLogDeliveries\",\"logs:PutResourcePolicy\",\"logs:DescribeResourcePolicies\",\"logs:DescribeLogGroups\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}",
+            "role": "waste-classifier-dev-step-functions-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.orchestration.aws_iam_role.step_functions_role"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "step_functions_sagemaker_policy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "waste-classifier-dev-step-functions-role:waste-classifier-dev-sfn-sagemaker-policy",
+            "name": "waste-classifier-dev-sfn-sagemaker-policy",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"sagemaker:CreateTrainingJob\",\"sagemaker:DescribeTrainingJob\",\"sagemaker:StopTrainingJob\",\"sagemaker:AddTags\",\"sagemaker:UpdateTrainingJob\",\"sagemaker:CreateModel\",\"sagemaker:DeleteModel\",\"sagemaker:CreateEndpointConfig\",\"sagemaker:DeleteEndpointConfig\",\"sagemaker:UpdateEndpoint\",\"sagemaker:DescribeEndpoint\",\"sagemaker:DescribeEndpointConfig\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":\"iam:PassRole\",\"Condition\":{\"StringEquals\":{\"iam:PassedToService\":\"sagemaker.amazonaws.com\"}},\"Effect\":\"Allow\",\"Resource\":\"arn:aws:iam::979054355848:role/waste-classifier-dev-sagemaker-execution-role\"},{\"Action\":[\"events:PutTargets\",\"events:PutRule\",\"events:DescribeRule\",\"events:DeleteRule\",\"events:RemoveTargets\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"ssm:PutParameter\",\"ssm:GetParameter\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ssm:*:*:parameter/waste-classifier/dev/*\"}]}",
+            "role": "waste-classifier-dev-step-functions-role"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.orchestration.aws_iam_role.step_functions_role",
+            "module.orchestration.data.aws_caller_identity.current"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_lambda_event_source_mapping",
+      "name": "sqs_to_lambda",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "amazon_managed_kafka_event_source_config": [],
+            "arn": "arn:aws:lambda:us-east-1:979054355848:event-source-mapping:acf2f380-16b2-44fd-ad85-e01148a1637c",
+            "batch_size": 100,
+            "bisect_batch_on_function_error": false,
+            "destination_config": [],
+            "document_db_event_source_config": [],
+            "enabled": true,
+            "event_source_arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger",
+            "filter_criteria": [],
+            "function_arn": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-etl-deduplicator",
+            "function_name": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-etl-deduplicator",
+            "function_response_types": [],
+            "id": "acf2f380-16b2-44fd-ad85-e01148a1637c",
+            "kms_key_arn": "",
+            "last_modified": "2026-05-28T04:17:34Z",
+            "last_processing_result": "",
+            "maximum_batching_window_in_seconds": 300,
+            "maximum_record_age_in_seconds": 0,
+            "maximum_retry_attempts": 0,
+            "metrics_config": [],
+            "parallelization_factor": 0,
+            "provisioned_poller_config": [],
+            "queues": [],
+            "scaling_config": [],
+            "self_managed_event_source": [],
+            "self_managed_kafka_event_source_config": [],
+            "source_access_configuration": [],
+            "starting_position": "",
+            "starting_position_timestamp": "",
+            "state": "Enabled",
+            "state_transition_reason": "USER_INITIATED",
+            "tags": {},
+            "tags_all": {},
+            "topics": [],
+            "tumbling_window_in_seconds": 0,
+            "uuid": "acf2f380-16b2-44fd-ad85-e01148a1637c"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.orchestration.aws_cloudwatch_log_group.step_functions",
+            "module.orchestration.aws_iam_role.lambda_dedup_role",
+            "module.orchestration.aws_iam_role.step_functions_role",
+            "module.orchestration.aws_lambda_function.etl_deduplicator",
+            "module.orchestration.aws_sfn_state_machine.etl_orchestration",
+            "module.orchestration.aws_sqs_queue.etl_trigger",
+            "module.orchestration.data.archive_file.lambda_dedup_zip",
+            "module.orchestration.data.aws_caller_identity.current"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "etl_deduplicator",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-etl-deduplicator",
+            "code_sha256": "2pYUp90qIbqYdwRPy2dknAWqfOAtHm2XFOzVGgL7xXU=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "CW_NAMESPACE": "WasteClassifier/Metrics",
+                  "MIN_AVG_CONFIDENCE": "0.10",
+                  "MIN_DAYS_BETWEEN_RUNS": "15",
+                  "MIN_NEW_IMAGES": "1000",
+                  "RAW_BUCKET": "waste-classifier-dev-raw-v3",
+                  "SSM_PREFIX": "/waste-classifier/dev",
+                  "STATE_MACHINE_ARN": "arn:aws:states:us-east-1:979054355848:stateMachine:waste-classifier-dev-etl-orchestration"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "./../scripts/lambda_deduplicator.zip",
+            "function_name": "waste-classifier-dev-etl-deduplicator",
+            "handler": "lambda_deduplicator.handler",
+            "id": "waste-classifier-dev-etl-deduplicator",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-etl-deduplicator/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2026-05-28T04:17:11.671+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/waste-classifier-dev-etl-deduplicator",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-etl-deduplicator:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:979054355848:function:waste-classifier-dev-etl-deduplicator:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::979054355848:role/waste-classifier-dev-lambda-dedup-role",
+            "runtime": "python3.12",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "2pYUp90qIbqYdwRPy2dknAWqfOAtHm2XFOzVGgL7xXU=",
+            "source_code_size": 3890,
+            "tags": {},
+            "tags_all": {},
+            "timeout": 60,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "module.orchestration.aws_cloudwatch_log_group.step_functions",
+            "module.orchestration.aws_iam_role.lambda_dedup_role",
+            "module.orchestration.aws_iam_role.step_functions_role",
+            "module.orchestration.aws_sfn_state_machine.etl_orchestration",
+            "module.orchestration.data.archive_file.lambda_dedup_zip",
+            "module.orchestration.data.aws_caller_identity.current"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_s3_bucket_notification",
+      "name": "raw_bucket_notifications",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bucket": "waste-classifier-dev-raw-v3",
+            "eventbridge": true,
+            "id": "waste-classifier-dev-raw-v3",
+            "lambda_function": [],
+            "queue": [],
+            "topic": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_sfn_state_machine",
+      "name": "etl_orchestration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:states:us-east-1:979054355848:stateMachine:waste-classifier-dev-etl-orchestration",
+            "creation_date": "2026-05-28T04:17:09Z",
+            "definition": "{\"Comment\":\"Run Glue crawler, wait for catalog refresh, then run the Glue job and trigger SageMaker training\",\"StartAt\":\"StartCrawler\",\"States\":{\"CrawlerFailed\":{\"Cause\":\"Glue crawler did not succeed\",\"Error\":\"CrawlerFailed\",\"Type\":\"Fail\"},\"CrawlerFinished\":{\"Choices\":[{\"Next\":\"StartGlueJob\",\"StringEquals\":\"READY\",\"Variable\":\"$.CrawlerStatus.Crawler.State\"}],\"Default\":\"CrawlerFailed\",\"Type\":\"Choice\"},\"CrawlerRunning\":{\"Choices\":[{\"Next\":\"WaitForCrawler\",\"StringEquals\":\"RUNNING\",\"Variable\":\"$.CrawlerStatus.Crawler.State\"},{\"Next\":\"WaitForCrawler\",\"StringEquals\":\"STOPPING\",\"Variable\":\"$.CrawlerStatus.Crawler.State\"}],\"Default\":\"CrawlerFinished\",\"Type\":\"Choice\"},\"CreateEndpointConfig\":{\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"JobFailed\",\"ResultPath\":\"$.EndpointConfigError\"}],\"Next\":\"UpdateEndpoint\",\"Parameters\":{\"EndpointConfigName.$\":\"States.Format('waste-classifier-b3-{}', $$.Execution.Name)\",\"ProductionVariants\":[{\"InitialInstanceCount\":1,\"InstanceType\":\"ml.m5.large\",\"ModelName.$\":\"States.Format('waste-classifier-b3-{}', $$.Execution.Name)\",\"VariantName\":\"AllTraffic\"}]},\"Resource\":\"arn:aws:states:::sagemaker:createEndpointConfig\",\"ResultPath\":\"$.EndpointConfigResult\",\"Type\":\"Task\"},\"CreateModel\":{\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"JobFailed\",\"ResultPath\":\"$.CreateModelError\"}],\"Next\":\"CreateEndpointConfig\",\"Parameters\":{\"ExecutionRoleArn\":\"arn:aws:iam::979054355848:role/waste-classifier-dev-sagemaker-execution-role\",\"ModelName.$\":\"States.Format('waste-classifier-b3-{}', $$.Execution.Name)\",\"PrimaryContainer\":{\"Image\":\"763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker\",\"ModelDataUrl.$\":\"States.Format('s3://waste-classifier-dev-code-v3/models/waste-classifier-b3-{}/output/model.tar.gz', $$.Execution.Name)\"}},\"Resource\":\"arn:aws:states:::sagemaker:createModel\",\"ResultPath\":\"$.CreateModelResult\",\"Type\":\"Task\"},\"EndpointUpdating\":{\"Choices\":[{\"Next\":\"WaitForEndpointUpdate\",\"StringEquals\":\"UPDATING\",\"Variable\":\"$.EndpointStatus.EndpointStatus\"},{\"Next\":\"PipelineSucceeded\",\"StringEquals\":\"IN_SERVICE\",\"Variable\":\"$.EndpointStatus.EndpointStatus\"}],\"Default\":\"JobFailed\",\"Type\":\"Choice\"},\"GetCrawlerStatus\":{\"Next\":\"CrawlerRunning\",\"Parameters\":{\"Name\":\"waste-classifier-dev-raw-crawler\"},\"Resource\":\"arn:aws:states:::aws-sdk:glue:getCrawler\",\"ResultPath\":\"$.CrawlerStatus\",\"Type\":\"Task\"},\"GetEndpointStatus\":{\"Next\":\"EndpointUpdating\",\"Parameters\":{\"EndpointName\":\"waste-classifier-dev-classifier-endpoint\"},\"Resource\":\"arn:aws:states:::aws-sdk:sagemaker:describeEndpoint\",\"ResultPath\":\"$.EndpointStatus\",\"Type\":\"Task\"},\"GetJobStatus\":{\"Next\":\"JobRunning\",\"Parameters\":{\"JobName\":\"waste-classifier-dev-image-resize\",\"RunId.$\":\"$.JobStart.JobRunId\"},\"Resource\":\"arn:aws:states:::aws-sdk:glue:getJobRun\",\"ResultPath\":\"$.JobStatus\",\"Type\":\"Task\"},\"JobEvaluation\":{\"Choices\":[{\"Next\":\"StartSageMakerTraining\",\"StringEquals\":\"SUCCEEDED\",\"Variable\":\"$.JobStatus.JobRun.JobRunState\"}],\"Default\":\"JobFailed\",\"Type\":\"Choice\"},\"JobFailed\":{\"Cause\":\"Glue job or SageMaker training did not succeed\",\"Error\":\"JobFailed\",\"Type\":\"Fail\"},\"JobRunning\":{\"Choices\":[{\"Next\":\"WaitForJob\",\"StringEquals\":\"RUNNING\",\"Variable\":\"$.JobStatus.JobRun.JobRunState\"}],\"Default\":\"JobEvaluation\",\"Type\":\"Choice\"},\"PipelineSucceeded\":{\"Type\":\"Succeed\"},\"StartCrawler\":{\"Next\":\"WaitForCrawler\",\"Parameters\":{\"Name\":\"waste-classifier-dev-raw-crawler\"},\"Resource\":\"arn:aws:states:::aws-sdk:glue:startCrawler\",\"ResultPath\":\"$.CrawlerStart\",\"Type\":\"Task\"},\"StartGlueJob\":{\"Next\":\"WaitForJob\",\"Parameters\":{\"Arguments\":{\"--target_batch.$\":\"$$.Execution.Input.target_batch\"},\"JobName\":\"waste-classifier-dev-image-resize\"},\"Resource\":\"arn:aws:states:::aws-sdk:glue:startJobRun\",\"ResultPath\":\"$.JobStart\",\"Type\":\"Task\"},\"StartSageMakerTraining\":{\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"JobFailed\",\"ResultPath\":\"$.SageMakerError\"}],\"Next\":\"CreateModel\",\"Parameters\":{\"AlgorithmSpecification\":{\"MetricDefinitions\":[{\"Name\":\"train:loss\",\"Regex\":\"train:loss=([0-9\\\\.]+);\"},{\"Name\":\"train:accuracy\",\"Regex\":\"train:accuracy=([0-9\\\\.]+);\"},{\"Name\":\"train:macro_f1\",\"Regex\":\"train:macro_f1=([0-9\\\\.]+);\"},{\"Name\":\"train:recall\",\"Regex\":\"train:recall=([0-9\\\\.]+);\"},{\"Name\":\"val:loss\",\"Regex\":\"val:loss=([0-9\\\\.]+);\"},{\"Name\":\"val:accuracy\",\"Regex\":\"val:accuracy=([0-9\\\\.]+);\"},{\"Name\":\"val:macro_f1\",\"Regex\":\"val:macro_f1=([0-9\\\\.]+);\"},{\"Name\":\"val:recall\",\"Regex\":\"val:recall=([0-9\\\\.]+);\"}],\"TrainingImage\":\"763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker\",\"TrainingInputMode\":\"File\"},\"Environment\":{\"INFERENCE_SCRIPT_BUCKET\":\"waste-classifier-dev-code-v3\",\"INFERENCE_SCRIPT_KEY\":\"inference/inference.py\",\"MODEL_SSM_PARAMETER\":\"/waste-classifier/dev/latest-model-url\",\"SM_HP_S3_OUTPUT_PATH\":\"s3://waste-classifier-dev-code-v3/models\",\"SSM_PREFIX\":\"/waste-classifier/dev\",\"TRAINING_JOB_NAME.$\":\"States.Format('waste-classifier-b3-{}', $$.Execution.Name)\"},\"HyperParameters\":{\"batch_size\":\"32\",\"epochs\":\"25\",\"lr\":\"0.0005\",\"num_classes\":\"10\",\"sagemaker_program\":\"train.py\",\"sagemaker_submit_directory\":\"s3://waste-classifier-dev-code-v3/training/sourcedir.tar.gz\"},\"InputDataConfig\":[{\"ChannelName\":\"train\",\"ContentType\":\"application/x-recordio\",\"DataSource\":{\"S3DataSource\":{\"S3DataDistributionType\":\"FullyReplicated\",\"S3DataType\":\"S3Prefix\",\"S3Uri.$\":\"States.Format('s3://waste-classifier-dev-processed-v3/{}/', $$.Execution.Input.target_batch)\"}}},{\"ChannelName\":\"validation\",\"ContentType\":\"application/x-recordio\",\"DataSource\":{\"S3DataSource\":{\"S3DataDistributionType\":\"FullyReplicated\",\"S3DataType\":\"S3Prefix\",\"S3Uri.$\":\"States.Format('s3://waste-classifier-dev-processed-v3/{}/', $$.Execution.Input.target_batch)\"}}},{\"ChannelName\":\"test\",\"ContentType\":\"application/x-recordio\",\"DataSource\":{\"S3DataSource\":{\"S3DataDistributionType\":\"FullyReplicated\",\"S3DataType\":\"S3Prefix\",\"S3Uri.$\":\"States.Format('s3://waste-classifier-dev-processed-v3/{}/', $$.Execution.Input.target_batch)\"}}}],\"OutputDataConfig\":{\"S3OutputPath\":\"s3://waste-classifier-dev-code-v3/models/\"},\"ResourceConfig\":{\"InstanceCount\":1,\"InstanceType\":\"ml.g4dn.xlarge\",\"VolumeSizeInGB\":30},\"RoleArn\":\"arn:aws:iam::979054355848:role/waste-classifier-dev-sagemaker-execution-role\",\"StoppingCondition\":{\"MaxRuntimeInSeconds\":18000},\"TensorBoardOutputConfig\":{\"S3OutputPath\":\"s3://waste-classifier-dev-code-v3/tensorboard/\"},\"TrainingJobName.$\":\"States.Format('waste-classifier-b3-{}', $$.Execution.Name)\"},\"Resource\":\"arn:aws:states:::sagemaker:createTrainingJob.sync\",\"ResultPath\":\"$.SageMakerResult\",\"Type\":\"Task\"},\"UpdateEndpoint\":{\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"JobFailed\",\"ResultPath\":\"$.UpdateEndpointError\"}],\"Next\":\"WaitForEndpointUpdate\",\"Parameters\":{\"EndpointConfigName.$\":\"States.Format('waste-classifier-b3-{}', $$.Execution.Name)\",\"EndpointName\":\"waste-classifier-dev-classifier-endpoint\"},\"Resource\":\"arn:aws:states:::sagemaker:updateEndpoint\",\"ResultPath\":\"$.UpdateEndpointResult\",\"Type\":\"Task\"},\"WaitForCrawler\":{\"Next\":\"GetCrawlerStatus\",\"Seconds\":30,\"Type\":\"Wait\"},\"WaitForEndpointUpdate\":{\"Next\":\"GetEndpointStatus\",\"Seconds\":60,\"Type\":\"Wait\"},\"WaitForJob\":{\"Next\":\"GetJobStatus\",\"Seconds\":60,\"Type\":\"Wait\"}}}",
+            "description": "",
+            "encryption_configuration": [
+              {
+                "kms_data_key_reuse_period_seconds": 0,
+                "kms_key_id": "",
+                "type": "AWS_OWNED_KEY"
+              }
+            ],
+            "id": "arn:aws:states:us-east-1:979054355848:stateMachine:waste-classifier-dev-etl-orchestration",
+            "logging_configuration": [
+              {
+                "include_execution_data": true,
+                "level": "ALL",
+                "log_destination": "arn:aws:logs:us-east-1:979054355848:log-group:/aws/states/waste-classifier-dev-etl-orchestration:*"
+              }
+            ],
+            "name": "waste-classifier-dev-etl-orchestration",
+            "name_prefix": "",
+            "publish": false,
+            "revision_id": "251e0fcd-1470-4f9a-9d82-a9353aeca6ae",
+            "role_arn": "arn:aws:iam::979054355848:role/waste-classifier-dev-step-functions-role",
+            "state_machine_version_arn": "",
+            "status": "ACTIVE",
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "tracing_configuration": [
+              {
+                "enabled": false
+              }
+            ],
+            "type": "STANDARD",
+            "version_description": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDAsImRlbGV0ZSI6MzAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwfX0=",
+          "dependencies": [
+            "module.orchestration.aws_cloudwatch_log_group.step_functions",
+            "module.orchestration.aws_iam_role.step_functions_role",
+            "module.orchestration.data.aws_caller_identity.current"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "etl_trigger",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-etl-trigger",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 3600,
+            "name": "waste-classifier-dev-etl-trigger",
+            "name_prefix": "",
+            "policy": "{\"Statement\":[{\"Action\":\"sqs:SendMessage\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"arn:aws:events:us-east-1:979054355848:rule/waste-classifier-dev-s3-raw-upload\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"events.amazonaws.com\"},\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger\"}],\"Version\":\"2012-10-17\"}",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "",
+            "sqs_managed_sse_enabled": true,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "url": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-etl-trigger",
+            "visibility_timeout_seconds": 600
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19"
+        }
+      ]
+    },
+    {
+      "module": "module.orchestration",
+      "mode": "managed",
+      "type": "aws_sqs_queue_policy",
+      "name": "etl_trigger",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "id": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-etl-trigger",
+            "policy": "{\"Statement\":[{\"Action\":\"sqs:SendMessage\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"arn:aws:events:us-east-1:979054355848:rule/waste-classifier-dev-s3-raw-upload\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"events.amazonaws.com\"},\"Resource\":\"arn:aws:sqs:us-east-1:979054355848:waste-classifier-dev-etl-trigger\"}],\"Version\":\"2012-10-17\"}",
+            "queue_url": "https://sqs.us-east-1.amazonaws.com/979054355848/waste-classifier-dev-etl-trigger"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "module.orchestration.aws_cloudwatch_event_rule.s3_raw_upload",
+            "module.orchestration.aws_sqs_queue.etl_trigger"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.storage",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "code",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acceleration_status": "",
+            "acl": null,
+            "arn": "arn:aws:s3:::waste-classifier-dev-code-v3",
+            "bucket": "waste-classifier-dev-code-v3",
+            "bucket_domain_name": "waste-classifier-dev-code-v3.s3.amazonaws.com",
+            "bucket_prefix": "",
+            "bucket_regional_domain_name": "waste-classifier-dev-code-v3.s3.us-east-1.amazonaws.com",
+            "cors_rule": [],
+            "force_destroy": true,
+            "grant": [
+              {
+                "id": "92110956c36436c96f2e1a1edc930b7b5bef85abce3bcea1e2e19efaca7100ab",
+                "permissions": [
+                  "FULL_CONTROL"
+                ],
+                "type": "CanonicalUser",
+                "uri": ""
+              }
+            ],
+            "hosted_zone_id": "Z3AQBSTGFYJSTF",
+            "id": "waste-classifier-dev-code-v3",
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": false,
+            "policy": "",
+            "region": "us-east-1",
+            "replication_configuration": [],
+            "request_payer": "BucketOwner",
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {
+                        "kms_master_key_id": "",
+                        "sse_algorithm": "AES256"
+                      }
+                    ],
+                    "bucket_key_enabled": false
+                  }
+                ]
+              }
+            ],
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "versioning": [
+              {
+                "enabled": false,
+                "mfa_delete": false
+              }
+            ],
+            "website": [],
+            "website_domain": null,
+            "website_endpoint": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjM2MDAwMDAwMDAwMDAsInJlYWQiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.storage",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "inference",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acceleration_status": "",
+            "acl": null,
+            "arn": "arn:aws:s3:::waste-classifier-dev-inference-v3",
+            "bucket": "waste-classifier-dev-inference-v3",
+            "bucket_domain_name": "waste-classifier-dev-inference-v3.s3.amazonaws.com",
+            "bucket_prefix": "",
+            "bucket_regional_domain_name": "waste-classifier-dev-inference-v3.s3.us-east-1.amazonaws.com",
+            "cors_rule": [],
+            "force_destroy": true,
+            "grant": [
+              {
+                "id": "92110956c36436c96f2e1a1edc930b7b5bef85abce3bcea1e2e19efaca7100ab",
+                "permissions": [
+                  "FULL_CONTROL"
+                ],
+                "type": "CanonicalUser",
+                "uri": ""
+              }
+            ],
+            "hosted_zone_id": "Z3AQBSTGFYJSTF",
+            "id": "waste-classifier-dev-inference-v3",
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": false,
+            "policy": "",
+            "region": "us-east-1",
+            "replication_configuration": [],
+            "request_payer": "BucketOwner",
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {
+                        "kms_master_key_id": "",
+                        "sse_algorithm": "AES256"
+                      }
+                    ],
+                    "bucket_key_enabled": false
+                  }
+                ]
+              }
+            ],
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "versioning": [
+              {
+                "enabled": false,
+                "mfa_delete": false
+              }
+            ],
+            "website": [],
+            "website_domain": null,
+            "website_endpoint": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjM2MDAwMDAwMDAwMDAsInJlYWQiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.storage",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "processed",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acceleration_status": "",
+            "acl": null,
+            "arn": "arn:aws:s3:::waste-classifier-dev-processed-v3",
+            "bucket": "waste-classifier-dev-processed-v3",
+            "bucket_domain_name": "waste-classifier-dev-processed-v3.s3.amazonaws.com",
+            "bucket_prefix": "",
+            "bucket_regional_domain_name": "waste-classifier-dev-processed-v3.s3.us-east-1.amazonaws.com",
+            "cors_rule": [],
+            "force_destroy": true,
+            "grant": [
+              {
+                "id": "92110956c36436c96f2e1a1edc930b7b5bef85abce3bcea1e2e19efaca7100ab",
+                "permissions": [
+                  "FULL_CONTROL"
+                ],
+                "type": "CanonicalUser",
+                "uri": ""
+              }
+            ],
+            "hosted_zone_id": "Z3AQBSTGFYJSTF",
+            "id": "waste-classifier-dev-processed-v3",
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": false,
+            "policy": "",
+            "region": "us-east-1",
+            "replication_configuration": [],
+            "request_payer": "BucketOwner",
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {
+                        "kms_master_key_id": "",
+                        "sse_algorithm": "AES256"
+                      }
+                    ],
+                    "bucket_key_enabled": false
+                  }
+                ]
+              }
+            ],
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "versioning": [
+              {
+                "enabled": false,
+                "mfa_delete": false
+              }
+            ],
+            "website": [],
+            "website_domain": null,
+            "website_endpoint": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjM2MDAwMDAwMDAwMDAsInJlYWQiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.storage",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "raw",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acceleration_status": "",
+            "acl": null,
+            "arn": "arn:aws:s3:::waste-classifier-dev-raw-v3",
+            "bucket": "waste-classifier-dev-raw-v3",
+            "bucket_domain_name": "waste-classifier-dev-raw-v3.s3.amazonaws.com",
+            "bucket_prefix": "",
+            "bucket_regional_domain_name": "waste-classifier-dev-raw-v3.s3.us-east-1.amazonaws.com",
+            "cors_rule": [],
+            "force_destroy": true,
+            "grant": [
+              {
+                "id": "92110956c36436c96f2e1a1edc930b7b5bef85abce3bcea1e2e19efaca7100ab",
+                "permissions": [
+                  "FULL_CONTROL"
+                ],
+                "type": "CanonicalUser",
+                "uri": ""
+              }
+            ],
+            "hosted_zone_id": "Z3AQBSTGFYJSTF",
+            "id": "waste-classifier-dev-raw-v3",
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": false,
+            "policy": "",
+            "region": "us-east-1",
+            "replication_configuration": [],
+            "request_payer": "BucketOwner",
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {
+                        "kms_master_key_id": "",
+                        "sse_algorithm": "AES256"
+                      }
+                    ],
+                    "bucket_key_enabled": false
+                  }
+                ]
+              }
+            ],
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "versioning": [
+              {
+                "enabled": false,
+                "mfa_delete": false
+              }
+            ],
+            "website": [],
+            "website_domain": null,
+            "website_endpoint": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjM2MDAwMDAwMDAwMDAsInJlYWQiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "create_before_destroy": true
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

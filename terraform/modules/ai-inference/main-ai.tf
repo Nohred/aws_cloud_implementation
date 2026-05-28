@@ -2,8 +2,10 @@ resource "aws_ssm_parameter" "latest_model_url" {
   count = var.model_ready ? 1 : 0
   name  = "/${var.project_name}/${var.environment}/latest-model-url"
   type  = "String"
-  value = "placeholder"   # just a non-empty string, never accessed until model_ready = true
-
+  
+  value = "s3://${var.project_name}-${var.environment}-models/placeholder.tar.gz"   
+  
+  overwrite = true  
   lifecycle {
     ignore_changes = [value] 
   }
@@ -12,6 +14,10 @@ resource "aws_ssm_parameter" "latest_model_url" {
 data "aws_ssm_parameter" "latest_model_url" {
   count = var.model_ready ? 1 : 0
   name  = "/${var.project_name}/${var.environment}/latest-model-url"
+
+  depends_on = [
+    aws_ssm_parameter.latest_model_url
+  ]
 }
 
 
@@ -27,9 +33,10 @@ resource "aws_s3_object" "inference_script" {
 
 
 resource "aws_sagemaker_model" "classifier" {
-  name               = "${var.project_name}-${var.environment}-classifier-model-v27"
+  # Append an 8-character hash of the model URL so the name changes exactly when the model changes
+  name               = "${var.project_name}-${var.environment}-model-${substr(md5(data.aws_ssm_parameter.latest_model_url[0].value), 0, 8)}"
   execution_role_arn = var.sagemaker_execution_role_arn
-  count = var.model_ready ? 1 : 0
+  count              = var.model_ready ? 1 : 0
 
   primary_container {
     image          = "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-sagemaker"
@@ -39,22 +46,28 @@ resource "aws_sagemaker_model" "classifier" {
       SAGEMAKER_PROGRAM = "inference.py"
     }
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_sagemaker_endpoint_configuration" "classifier" {
-  name = "${var.project_name}-${var.environment}-classifier-endpoint-config-v27"
+  # Same strategy for the endpoint config
+  name  = "${var.project_name}-${var.environment}-config-${substr(md5(data.aws_ssm_parameter.latest_model_url[0].value), 0, 8)}"
   count = var.model_ready ? 1 : 0
+
   production_variants {
     variant_name           = "AllTraffic"
-    # model_name             = aws_sagemaker_model.classifier.name
-    model_name = aws_sagemaker_model.classifier[0].name
-    
+    model_name             = aws_sagemaker_model.classifier[0].name
     initial_instance_count = 1
     instance_type          = var.endpoint_instance_type
     initial_variant_weight = 1
   }
 
-  lifecycle { create_before_destroy = true }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
@@ -158,7 +171,6 @@ resource "aws_iam_role" "lambda_inference" {
     }]
   })
 }
-
 resource "aws_iam_role_policy" "lambda_inference" {
   name = "${var.project_name}-${var.environment}-lambda-inference-policy"
   role = aws_iam_role.lambda_inference.id
@@ -166,11 +178,16 @@ resource "aws_iam_role_policy" "lambda_inference" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # Leer imágenes del bucket de inferencia
+      # Read images from inference bucket AND classes.json from code bucket
       {
         Effect   = "Allow"
-        Action   = ["s3:GetObject"]
-        Resource = "arn:aws:s3:::${var.inference_bucket_name}/*"
+        Action   = ["s3:GetObject", "s3:ListBucket"]
+        Resource = [
+          "arn:aws:s3:::${var.inference_bucket_name}",
+          "arn:aws:s3:::${var.inference_bucket_name}/*",
+          "arn:aws:s3:::${var.code_bucket_name}",
+          "arn:aws:s3:::${var.code_bucket_name}/*"
+        ]
       },
       # Invocar el endpoint de SageMaker
       {
@@ -184,7 +201,7 @@ resource "aws_iam_role_policy" "lambda_inference" {
         Action   = ["sns:Publish"]
         Resource = aws_sns_topic.predictions.arn
       },
-      # Consumir mensajes de SQS (necesario para el trigger)
+      # Consumir mensajes de SQS
       {
         Effect   = "Allow"
         Action   = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
@@ -198,13 +215,60 @@ resource "aws_iam_role_policy" "lambda_inference" {
       },
       # Publicar métrica personalizada de confianza en CloudWatch
       {
-      Effect   = "Allow"
-      Action   = ["cloudwatch:PutMetricData"]
-      Resource = "*"
+        Effect   = "Allow"
+        Action   = ["cloudwatch:PutMetricData"]
+        Resource = "*"
       }
     ]
   })
 }
+
+# resource "aws_iam_role_policy" "lambda_inference" {
+#   name = "${var.project_name}-${var.environment}-lambda-inference-policy"
+#   role = aws_iam_role.lambda_inference.id
+
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       # Leer imágenes del bucket de inferencia
+#       {
+#         Effect   = "Allow"
+#         Action   = ["s3:GetObject"]
+#         Resource = "arn:aws:s3:::${var.inference_bucket_name}/*"
+#       },
+#       # Invocar el endpoint de SageMaker
+#       {
+#         Effect   = "Allow"
+#         Action   = ["sagemaker:InvokeEndpoint"]
+#         Resource = "*"
+#       },
+#       # Publicar predicciones en SNS
+#       {
+#         Effect   = "Allow"
+#         Action   = ["sns:Publish"]
+#         Resource = aws_sns_topic.predictions.arn
+#       },
+#       # Consumir mensajes de SQS (necesario para el trigger)
+#       {
+#         Effect   = "Allow"
+#         Action   = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
+#         Resource = aws_sqs_queue.inference_queue.arn
+#       },
+#       # Logs en CloudWatch
+#       {
+#         Effect   = "Allow"
+#         Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+#         Resource = "arn:aws:logs:*:*:*"
+#       },
+#       # Publicar métrica personalizada de confianza en CloudWatch
+#       {
+#       Effect   = "Allow"
+#       Action   = ["cloudwatch:PutMetricData"]
+#       Resource = "*"
+#       }
+#     ]
+#   })
+# }
 
 # ── Lambda ────────────────────────────────────────────────────────────────────
 data "archive_file" "lambda_inference" {
@@ -224,7 +288,7 @@ resource "aws_lambda_function" "inference" {
 
   environment {
     variables = {
-      SAGEMAKER_ENDPOINT_NAME = var.sagemaker_endpoint_name
+      SAGEMAKER_ENDPOINT_NAME = "${var.project_name}-${var.environment}-classifier-endpoint"
       SNS_TOPIC_ARN           = aws_sns_topic.predictions.arn
       CODE_BUCKET             = var.code_bucket_name        
       CLASSES_KEY             = "models/classes.json"       

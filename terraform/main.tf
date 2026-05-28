@@ -61,7 +61,7 @@ module "ai_inference" {
   sagemaker_endpoint_name = "${var.project_name}-${var.environment}-endpoint"
   notification_emails = ["julianro120404@gmail.com", "ucalderon2912@gmail.com"]
   depends_on = [module.data_eng, module.storage]
-  model_ready = false # Set to true after first training job completes to deploy the endpoint
+  model_ready = true # Set to true after first training job completes to deploy the endpoint
 }
 
 module "monitoring" {
