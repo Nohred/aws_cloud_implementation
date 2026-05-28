@@ -9,6 +9,7 @@ Dataset.zip
 garbage_classification/
 garbage_classification_5/
 garbage_classification_1200/
+garbage_classification_15000_stratified/
 src/garbage_classification/
 temp/
 prueba_final_5.tar.gz

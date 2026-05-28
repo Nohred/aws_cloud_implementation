@@ -147,7 +147,7 @@ def train(args: dict):
     print(f"Clases: {class_names}\n")
 
     data_transforms = transforms.Compose([
-        transforms.Resize((300, 300)),
+        # transforms.Resize((300, 300)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
@@ -313,28 +313,78 @@ def train(args: dict):
     print(f"Modelo guardado en: {args['model_dir']}")
     print("\nENTRENAMIENTO COMPLETADO")
 
-    # ── Registrar URL del modelo en SSM Parameter Store ──────────────────────────
+    # # ── Registrar URL del modelo en SSM Parameter Store ──────────────────────────
+    # ssm_parameter = os.environ.get('MODEL_SSM_PARAMETER')
+    # if ssm_parameter:
+    #     output_path = os.environ.get('SM_OUTPUT_DIR', '/opt/ml/output')
+    #     training_job_name = os.environ.get('TRAINING_JOB_NAME', '')
+    #     s3_output_path    = os.environ.get('SM_HP_S3_OUTPUT_PATH', '')
+    #     if training_job_name and s3_output_path:
+    #         model_url = f"{s3_output_path.rstrip('/')}/{training_job_name}/output/model.tar.gz"
+    #         print(f"\n📌 Registrando modelo en SSM: {ssm_parameter}")
+    #         print(f"   URL: {model_url}")
+    #         boto3.client('ssm', region_name='us-east-1').put_parameter(
+    #             Name=ssm_parameter,
+    #             Value=model_url,
+    #             Type='String',
+    #             Overwrite=True
+    #         )
+    #         print("✅ SSM actualizado")
+    #     else:
+    #         print("[WARNING] No se pudo construir model_url: faltan variables de entorno")
+    # else:
+    #     print("[WARNING] MODEL_SSM_PARAMETER no definido. SSM no actualizado.")
+    # ── Registrar URL del modelo y métricas de retrain en SSM ────────────────
     ssm_parameter = os.environ.get('MODEL_SSM_PARAMETER')
-    if ssm_parameter:
-        output_path = os.environ.get('SM_OUTPUT_DIR', '/opt/ml/output')
-        training_job_name = os.environ.get('TRAINING_JOB_NAME', '')
-        s3_output_path    = os.environ.get('SM_HP_S3_OUTPUT_PATH', '')
+    ssm_prefix    = os.environ.get('SSM_PREFIX')  # e.g. /waste-classifier/dev
 
-        if training_job_name and s3_output_path:
-            model_url = f"{s3_output_path.rstrip('/')}/{training_job_name}/output/model.tar.gz"
-            print(f"\n📌 Registrando modelo en SSM: {ssm_parameter}")
-            print(f"   URL: {model_url}")
-            boto3.client('ssm', region_name='us-east-1').put_parameter(
-                Name=ssm_parameter,
-                Value=model_url,
+    # Use region from env instead of hardcoded us-east-1
+    aws_region        = os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
+    ssm_client        = boto3.client('ssm', region_name=aws_region)
+    training_job_name = os.environ.get('TRAINING_JOB_NAME', '')
+    s3_output_path    = os.environ.get('SM_HP_S3_OUTPUT_PATH', '')
+
+    # ── 1. Model URL → used by endpoint update logic ──────────────────────────
+    if ssm_parameter and training_job_name and s3_output_path:
+        model_url = f"{s3_output_path.rstrip('/')}/{training_job_name}/output/model.tar.gz"
+        print(f"\n📌 Registrando modelo en SSM: {ssm_parameter}")
+        print(f"   URL: {model_url}")
+        ssm_client.put_parameter(
+            Name=ssm_parameter,
+            Value=model_url,
+            Type='String',
+            Overwrite=True
+        )
+        print("✅ SSM modelo actualizado")
+    else:
+        print("[WARNING] SSM modelo no actualizado — faltan MODEL_SSM_PARAMETER, TRAINING_JOB_NAME o SM_HP_S3_OUTPUT_PATH")
+
+    # ── 2. Retrain tracking → read by lambda_deduplicator gate ───────────────
+    if ssm_prefix:
+        from datetime import datetime, timezone
+
+        # Total images seen across all splits
+        total_images = len(train_dataset) + len(val_dataset) + len(test_dataset)
+
+        try:
+            ssm_client.put_parameter(
+                Name=f"{ssm_prefix}/last-trained-at",
+                Value=datetime.now(timezone.utc).isoformat(),
                 Type='String',
                 Overwrite=True
             )
-            print("✅ SSM actualizado")
-        else:
-            print("[WARNING] No se pudo construir model_url: faltan variables de entorno")
+            ssm_client.put_parameter(
+                Name=f"{ssm_prefix}/last-trained-count",
+                Value=str(total_images),
+                Type='String',
+                Overwrite=True
+            )
+            print(f"✅ SSM retrain tracking actualizado — {total_images} imágenes, timestamp registrado")
+        except Exception as e:
+            # Non-fatal — model is saved, don't fail the training job over this
+            print(f"[WARNING] No se pudo actualizar SSM retrain tracking: {e}")
     else:
-        print("[WARNING] MODEL_SSM_PARAMETER no definido. SSM no actualizado.")
+        print("[WARNING] SSM_PREFIX no definido. Retrain tracking no actualizado.")
 
 
 # ── 5. Punto de entrada ───────────────────────────────────────────────────────

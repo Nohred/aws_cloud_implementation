@@ -1,3 +1,5 @@
 tensorboard>=2.13.0      # Curvas de aprendizaje en tiempo real
 scikit-learn>=1.3.2      # confusion_matrix, f1_score, accuracy_score, recall_score
+opencv-python-headless>=
+numpy-headless>=1.26.4     # Procesamiento de imágenes en Glue ETL
  

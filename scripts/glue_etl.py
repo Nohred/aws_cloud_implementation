@@ -14,6 +14,8 @@ import io
 from datetime import datetime
 import tarfile
 import os
+import cv2
+import numpy as np
 
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'input_bucket', 'output_bucket', 'size'])
 
@@ -120,11 +122,25 @@ def process_image(pair, class_mapping, size):
             raise TypeError(f'Payload no soportado: {type(portable)!r}')
 
         img = Image.open(io.BytesIO(data)).convert('RGB')
-        img = img.resize((size, size), Image.LANCZOS)
-        buf = io.BytesIO()
-        img.save(buf, format='JPEG', quality=90)
+        # img = img.resize((size, size), Image.LANCZOS)
+        # buf = io.BytesIO()
+        # img.save(buf, format='JPEG', quality=90)
 
-        return (path, ('SUCCESS', _pack_record(float(label_id), buf.getvalue())))
+        
+        bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        l_eq = clahe.apply(l)
+        lab_eq = cv2.merge([l_eq, a, b])
+        bgr_eq = cv2.cvtColor(lab_eq, cv2.COLOR_LAB2BGR)
+
+        # Back to JPEG bytes
+        success, buf_arr = cv2.imencode('.jpg', bgr_eq, [cv2.IMWRITE_JPEG_QUALITY, 95])
+        jpeg_bytes = buf_arr.tobytes()
+
+        # return (path, ('SUCCESS', _pack_record(float(label_id), buf.getvalue())))
+        return (path, ('SUCCESS', _pack_record(float(label_id), jpeg_bytes)))
     except Exception as exc:
         return (path, ('FAILED', str(exc)))
 def main():

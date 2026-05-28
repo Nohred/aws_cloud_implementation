@@ -10,6 +10,7 @@ ENDPOINT_NAME = os.environ.get("SAGEMAKER_ENDPOINT_NAME")
 SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN")
 CODE_BUCKET   = os.environ.get("CODE_BUCKET")
 CLASSES_KEY   = os.environ.get("CLASSES_KEY", "models/classes.json")
+CW_NAMESPACE = os.environ.get("CW_NAMESPACE", "WasteClassifier/Metrics")
 
 if not ENDPOINT_NAME:
     raise RuntimeError("Missing required env var: SAGEMAKER_ENDPOINT_NAME")
@@ -22,6 +23,7 @@ if not CODE_BUCKET:
 s3        = boto3.client("s3")
 sagemaker = boto3.client("sagemaker-runtime")
 sns       = boto3.client("sns")
+cw        = boto3.client("cloudwatch")
 
 # ── Load class index → name mapping once at cold start ───────────────────────
 # classes.json is written by train.py as {"cardboard": 0, "glass": 1, ...}
@@ -153,6 +155,28 @@ def handler(event, context):
                     Subject=subject,
                     Message=message_body
                 )
+
+                # ── Emit confidence metric for retraining condition 3 ─────────
+                # Each prediction pushes one data point to CloudWatch.
+                # The deduplicator queries the 24h average of this metric
+                # and triggers retraining only if it drops below MIN_AVG_CONFIDENCE.
+                try:
+                    cw.put_metric_data(
+                        Namespace=CW_NAMESPACE,
+                        MetricData=[{
+                            "MetricName": "AvgConfidence",
+                            "Value":      confidence,          # float 0.0–1.0
+                            "Unit":       "None",
+                            "Dimensions": [{
+                                "Name":  "EndpointName",
+                                "Value": ENDPOINT_NAME
+                            }]
+                        }]
+                    )
+                    logger.info(f"Emitted AvgConfidence={confidence:.4f} to {CW_NAMESPACE}")
+                except Exception as cw_err:
+                    # Non-fatal — a CloudWatch failure must never block inference
+                    logger.warning(f"Could not emit confidence metric: {cw_err}")
 
                 # ← Exact strings for CloudWatch metric filters (do not change)
                 print("SUCCESS")

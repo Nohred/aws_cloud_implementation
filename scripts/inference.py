@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 from PIL import Image
 from torchvision import models, transforms
+import cv2
+import numpy as np
 
 IMAGE_SIZE = 300
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -51,7 +53,6 @@ def model_fn(model_dir):
     model.eval()
 
     preprocess = transforms.Compose([
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225]),
@@ -60,11 +61,28 @@ def model_fn(model_dir):
     return {"model": model, "classes": idx_to_class, "preprocess": preprocess}
 
 
+
 def input_fn(request_body, content_type):
-    if content_type not in ["application/x-image", "image/jpeg", "image/png"]:
+    if content_type not in ["application/x-image", "image/jpeg", "image/png", "image/jpeg"]:
         raise ValueError(f"Unsupported content type: {content_type}")
-    image = Image.open(BytesIO(request_body)).convert("RGB")
-    return image
+    
+    # 1. Open and force RGB
+    img = Image.open(BytesIO(request_body)).convert("RGB")
+    
+    # 2. Resize with LANCZOS (matches Glue preprocessing)
+    img = img.resize((IMAGE_SIZE, IMAGE_SIZE), Image.LANCZOS)
+    
+    # 3. CLAHE on LAB colorspace (matches Glue preprocessing)
+    bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
+    l, a, b_ch = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    lab_eq = cv2.merge([clahe.apply(l), a, b_ch])
+    bgr_eq = cv2.cvtColor(lab_eq, cv2.COLOR_LAB2BGR)
+    
+    # 4. Back to PIL RGB for the transform pipeline
+    img_processed = Image.fromarray(cv2.cvtColor(bgr_eq, cv2.COLOR_BGR2RGB))
+    return img_processed
 
 
 def predict_fn(input_data, model_artifacts):
