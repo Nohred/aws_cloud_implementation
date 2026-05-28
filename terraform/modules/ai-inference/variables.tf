@@ -10,10 +10,6 @@ variable "code_bucket_name" {
   type = string
 }
 
-# variable "model_data_url" {
-#   type = string
-# }
-
 variable "sagemaker_execution_role_arn" {
   type = string
 }

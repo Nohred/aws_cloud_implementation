@@ -186,7 +186,7 @@ resource "aws_glue_job" "image_resize" {
     "--output_bucket" = "${var.processed_bucket_name}"
     "--output_prefix" = "resized/"
     "--size"          = "300"
-    "--additional-python-modules" = "Pillow==10.3.0,numpy==1.26.4"
+    "--additional-python-modules" = "Pillow==10.3.0,numpy==1.26.4, opencv-python, headless numpy"
     "--enable-metrics" = "true" 
   }
 }

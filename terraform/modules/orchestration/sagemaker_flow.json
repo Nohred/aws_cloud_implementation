@@ -5,27 +5,26 @@
     "Parameters": {
       "TrainingJobName.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)",
       "RoleArn": "arn:aws:iam::${account_id}:role/${project_name}-${environment}-sagemaker-execution-role",
-
-    "Environment": {
-      "INFERENCE_SCRIPT_BUCKET": "${code_bucket_name}",
-      "INFERENCE_SCRIPT_KEY":    "inference/inference.py",
-      "MODEL_SSM_PARAMETER":     "/${project_name}/${environment}/latest-model-url",
-      "SM_HP_S3_OUTPUT_PATH":    "s3://${code_bucket_name}/models",
-      "TRAINING_JOB_NAME.$":     "States.Format('${project_name}-b3-{}', $$.Execution.Name)"
-    },
-
+      "Environment": {
+        "INFERENCE_SCRIPT_BUCKET": "${code_bucket_name}",
+        "INFERENCE_SCRIPT_KEY": "inference/inference.py",
+        "MODEL_SSM_PARAMETER": "/${project_name}/${environment}/latest-model-url",
+        "SM_HP_S3_OUTPUT_PATH": "s3://${code_bucket_name}/models",
+        "TRAINING_JOB_NAME.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)",
+        "SSM_PREFIX": "/${project_name}/${environment}"
+      },
       "AlgorithmSpecification": {
         "TrainingImage": "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker",
         "TrainingInputMode": "File",
         "MetricDefinitions": [
-          { "Name": "train:loss",     "Regex": "train:loss=([0-9\\.]+);" },
+          { "Name": "train:loss", "Regex": "train:loss=([0-9\\.]+);" },
           { "Name": "train:accuracy", "Regex": "train:accuracy=([0-9\\.]+);" },
           { "Name": "train:macro_f1", "Regex": "train:macro_f1=([0-9\\.]+);" },
-          { "Name": "train:recall",   "Regex": "train:recall=([0-9\\.]+);" },
-          { "Name": "val:loss",       "Regex": "val:loss=([0-9\\.]+);" },
-          { "Name": "val:accuracy",   "Regex": "val:accuracy=([0-9\\.]+);" },
-          { "Name": "val:macro_f1",   "Regex": "val:macro_f1=([0-9\\.]+);" },
-          { "Name": "val:recall",     "Regex": "val:recall=([0-9\\.]+);" }
+          { "Name": "train:recall", "Regex": "train:recall=([0-9\\.]+);" },
+          { "Name": "val:loss", "Regex": "val:loss=([0-9\\.]+);" },
+          { "Name": "val:accuracy", "Regex": "val:accuracy=([0-9\\.]+);" },
+          { "Name": "val:macro_f1", "Regex": "val:macro_f1=([0-9\\.]+);" },
+          { "Name": "val:recall", "Regex": "val:recall=([0-9\\.]+);" }
         ]
       },
       "HyperParameters": {
@@ -38,17 +37,18 @@
       },
       "ResourceConfig": {
         "InstanceCount": 1,
-        "InstanceType": "ml.g4dn.xlarge", 
+        "InstanceType": "ml.g4dn.xlarge",
         "VolumeSizeInGB": 30
       },
-      "StoppingCondition": { "MaxRuntimeInSeconds": 18000 },
+      "StoppingCondition": {
+        "MaxRuntimeInSeconds": 18000
+      },
       "OutputDataConfig": {
         "S3OutputPath": "s3://${project_name}-${environment}-code-v3/models/"
       },
       "TensorBoardOutputConfig": {
         "S3OutputPath": "s3://${project_name}-${environment}-code-v3/tensorboard/"
-      }, 
-     
+      },
       "InputDataConfig": [
         {
           "ChannelName": "train",
@@ -86,11 +86,107 @@
       ]
     },
     "ResultPath": "$.SageMakerResult",
-    "Next": "PipelineSucceeded",
-    "Catch": [{
-      "ErrorEquals": ["States.ALL"],
-      "ResultPath": "$.SageMakerError",
-      "Next": "JobFailed"
-    }]
+    "Next": "CreateModel",
+    "Catch": [
+      {
+        "ErrorEquals": ["States.ALL"],
+        "ResultPath": "$.SageMakerError",
+        "Next": "JobFailed"
+      }
+    ]
+  },
+  "CreateModel": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::sagemaker:createModel",
+    "Parameters": {
+      "ModelName.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)",
+      "ExecutionRoleArn": "arn:aws:iam::${account_id}:role/${project_name}-${environment}-sagemaker-execution-role",
+      "PrimaryContainer": {
+        "Image": "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker",
+        "ModelDataUrl.$": "States.Format('s3://${project_name}-${environment}-code-v3/models/${project_name}-b3-{}/output/model.tar.gz', $$.Execution.Name)"
+      }
+    },
+    "ResultPath": "$.CreateModelResult",
+    "Next": "CreateEndpointConfig",
+    "Catch": [
+      {
+        "ErrorEquals": ["States.ALL"],
+        "ResultPath": "$.CreateModelError",
+        "Next": "JobFailed"
+      }
+    ]
+  },
+  "CreateEndpointConfig": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::sagemaker:createEndpointConfig",
+    "Parameters": {
+      "EndpointConfigName.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)",
+      "ProductionVariants": [
+        {
+          "VariantName": "AllTraffic",
+          "ModelName.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)",
+          "InstanceType": "ml.m5.large",
+          "InitialInstanceCount": 1
+        }
+      ]
+    },
+    "ResultPath": "$.EndpointConfigResult",
+    "Next": "UpdateEndpoint",
+    "Catch": [
+      {
+        "ErrorEquals": ["States.ALL"],
+        "ResultPath": "$.EndpointConfigError",
+        "Next": "JobFailed"
+      }
+    ]
+  },
+  "UpdateEndpoint": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::sagemaker:updateEndpoint",
+    "Parameters": {
+      "EndpointName": "${project_name}-${environment}-classifier-endpoint",
+      "EndpointConfigName.$": "States.Format('${project_name}-b3-{}', $$.Execution.Name)"
+    },
+    "ResultPath": "$.UpdateEndpointResult",
+    "Next": "WaitForEndpointUpdate",
+    "Catch": [
+      {
+        "ErrorEquals": ["States.ALL"],
+        "ResultPath": "$.UpdateEndpointError",
+        "Next": "JobFailed"
+      }
+    ]
+  },
+  "WaitForEndpointUpdate": {
+    "Type": "Wait",
+    "Seconds": 60,
+    "Next": "GetEndpointStatus"
+  },
+  "GetEndpointStatus": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::aws-sdk:sagemaker:describeEndpoint",
+    "Parameters": {
+      "EndpointName": "${project_name}-${environment}-classifier-endpoint"
+    },
+    "ResultPath": "$.EndpointStatus",
+    "Next": "EndpointUpdating"
+  },
+  "EndpointUpdating": {
+    "Type": "Choice",
+    "Choices": [
+      {
+        "Variable": "$.EndpointStatus.EndpointStatus",
+        "StringEquals": "UPDATING",
+        "Next": "WaitForEndpointUpdate"
+      },
+      {
+        "Variable": "$.EndpointStatus.EndpointStatus",
+        "StringEquals": "IN_SERVICE",
+        "Next": "PipelineSucceeded"
+      }
+    ],
+    "Default": "JobFailed"
   }
 }
+
+

@@ -1,4 +1,5 @@
 resource "aws_ssm_parameter" "latest_model_url" {
+  count = var.model_ready ? 1 : 0
   name  = "/${var.project_name}/${var.environment}/latest-model-url"
   type  = "String"
   value = "placeholder"   # just a non-empty string, never accessed until model_ready = true
@@ -7,6 +8,13 @@ resource "aws_ssm_parameter" "latest_model_url" {
     ignore_changes = [value] 
   }
 }
+
+data "aws_ssm_parameter" "latest_model_url" {
+  count = var.model_ready ? 1 : 0
+  name  = "/${var.project_name}/${var.environment}/latest-model-url"
+}
+
+
 #sagemaker_execution_role_arn
 
 resource "aws_s3_object" "inference_script" {
@@ -25,7 +33,7 @@ resource "aws_sagemaker_model" "classifier" {
 
   primary_container {
     image          = "763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-sagemaker"
-    model_data_url = data.aws_ssm_parameter.latest_model_url.value  # ← siempre el último
+    model_data_url = data.aws_ssm_parameter.latest_model_url[0].value
 
     environment = {
       SAGEMAKER_PROGRAM = "inference.py"
@@ -38,7 +46,9 @@ resource "aws_sagemaker_endpoint_configuration" "classifier" {
   count = var.model_ready ? 1 : 0
   production_variants {
     variant_name           = "AllTraffic"
-    model_name             = aws_sagemaker_model.classifier.name
+    # model_name             = aws_sagemaker_model.classifier.name
+    model_name = aws_sagemaker_model.classifier[0].name
+    
     initial_instance_count = 1
     instance_type          = var.endpoint_instance_type
     initial_variant_weight = 1
@@ -185,6 +195,12 @@ resource "aws_iam_role_policy" "lambda_inference" {
         Effect   = "Allow"
         Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "arn:aws:logs:*:*:*"
+      },
+      # Publicar métrica personalizada de confianza en CloudWatch
+      {
+      Effect   = "Allow"
+      Action   = ["cloudwatch:PutMetricData"]
+      Resource = "*"
       }
     ]
   })
@@ -245,11 +261,13 @@ resource "aws_cloudwatch_metric_alarm" "dlq_not_empty" {
 
 resource "aws_sagemaker_endpoint" "classifier" {
   name                 = "${var.project_name}-${var.environment}-classifier-endpoint"
-  endpoint_config_name = aws_sagemaker_endpoint_configuration.classifier.name
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.classifier[0].name
   count = var.model_ready ? 1 : 0
 }
+
+
 output "endpoint_name" {
   description = "El nombre del endpoint de SageMaker creado por el módulo"
-  value       = aws_sagemaker_endpoint.classifier.name
+  value = var.model_ready ? aws_sagemaker_endpoint.classifier[0].name : ""
 }
 
